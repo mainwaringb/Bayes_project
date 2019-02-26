@@ -37,7 +37,7 @@ RECODE vote2_2017 (801 = 96) (322 = 8).
 VALUE LABELS vote2_2017 1 "CDU/CSU" 4 "SPD" 5 "FDP" 6 "Green" 7 "Left" 8 "AfD" 96 "Other" 97 "Ref/NA" 99 "Abstain".
 
 RECODE vote2_2017 (8 = 1) (1 THRU 7 = 0 ) (96 = 0) (97 = SYSMIS) (99 = SYSMIS)  INTO voteAfD_2017.
-VALUE LABELS voteAfD_2017 1 "Yes" 2 "No".
+VALUE LABELS voteAfD_2017 1 "Yes" 0 "No".
 
 
 IF(q2c > 1995) eligible_2013 = 2.
