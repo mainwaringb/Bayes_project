@@ -57,5 +57,8 @@ VALUE LABELS voteAfD_2013 1 "Yes" 2 "No".
 COMPUTE Fav_AfD = q20g.
 COMPUTE leftright_self = q54.
 
+RECODE q55a q55b q55c q55d q55e q55f (1 = 1) (2 = 2) (3 = 3) (4 = 4) (5 = 5) (6 = 6) (7 = 7) INTO
+q55a_recode q55b_recode q55c_recode q55d_recode q55e_recode q55f_recode.
+
 save outfile 'Pre-election - Processed.sav'.
 
