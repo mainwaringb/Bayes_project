@@ -176,6 +176,9 @@ VALUE LABELS agecat 1 "18-29" 2 "30-39" 3 "40-49" 4 "50-64" 5 "65-74" 6 "75+".
 COMPUTE Fav_AfD = q28g.
 COMPUTE leftright_self = q32.
 
+RECODE q74a q74b q74c q74d q74e q74f (1 = 1) (2 = 2) (3 = 3) (4 = 4) (5 = 5) (6 = 6) (7 = 7) INTO
+q74a_recode q74b_recode q74c_recode q74d_recode q74e_recode q74f_recode.
+
 
 save outfile 'Post-election - Processed.sav'.
 
