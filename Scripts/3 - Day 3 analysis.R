@@ -9,7 +9,7 @@ preSurvey <- read.spss("Data/Pre-Election - Processed.sav", to.data.frame = TRUE
 postSurvey <- read.spss("Data/Post-Election - Processed.sav", to.data.frame = TRUE)
 
 
-##===1 Pre-Election survey===
+##===1. Pre-Election survey===
 
 #We'll run a regression on the pre-election survey, setting an uninformative prior
 #Then use this to set the prior for post-election
@@ -72,7 +72,7 @@ jags_summary.preLin
 cor(unlist(jags_out.preLin[,"Beta1"]), unlist(jags_out.preLin[,"Beta2"]))
 
 
-##===Post-Election survey===
+##===2. Post-Election survey===
 
 #--Define data--
 
@@ -115,5 +115,3 @@ jags_summary.preLin
 #--Visualizations--
 
 #Consider adding some visualizations here - marginal effects plots, and graphs of prior vs posterior
-
-##===Binomial model, with basic missing data handling===
