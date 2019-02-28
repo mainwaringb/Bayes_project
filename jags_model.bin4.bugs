@@ -1,0 +1,25 @@
+model{
+    for(n in 1:N){
+        ystar[n] = inprod(x[n,],beta[])
+        logit(p[n]) = ystar[n]
+        y[n] ~ dbern(p[n])
+        
+        #manually impute missing x's for only a single variable, x2 = fav_afd
+        x[n, 2] ~ dnorm(muA[n], tauA)
+        muA[n] = gammaA[1] + gammaA[2] * x[n, 3]
+        x[n, 3] ~ dnorm(muB[n], tauB)
+        muB[n] = gammaB[1] + gammaB[2] * x[n, 2]
+    }
+    
+    for(j in 1:J){
+        beta[j] ~ dnorm(0, 0.01)
+    }
+    
+    gammaA[1] ~ dnorm(0, 0.01)
+    gammaA[2] ~ dnorm(0, 0.01)
+    gammaB[1] ~ dnorm(0, 0.01)
+    gammaB[2] ~ dnorm(0, 0.01)
+
+    tauA ~ dgamma(0.001, 0.001)
+    tauB ~ dgamma(0.001, 0.001)
+}
