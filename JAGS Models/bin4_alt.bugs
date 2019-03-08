@@ -1,24 +1,47 @@
 model{
+    #====Define individual-level parameters====
     for(n in 1:N){
-        ystar[n] = inprod(x_imp[n,],beta[])
+        ystar[n] = beta0 + (inprod(x_imp[n,],beta[]))
         logit(p[n]) = ystar[n]
         y[n] ~ dbern(p[n])
 
-        #JAGS is complaining if it encounters NAs, so let's fill these in with a uniform distribution
-        x[n,2] ~ dunif(1,11)
-        x[n,3] ~ dunif(1,7)
+        #"Fill in" initial missing values via a uniform distribution
+        #The values "filled in" via uniform distribution only get used for imputing other X's, as we pass estimate y using the x_hash rather than x
+        #Perhaps a better approach here would be to "fill in" missing X via FIML or MICE
+        x[n,1] ~ dunif(1,11)
+        x[n,2] ~ dunif(1,7)
 
-        #Set x_imp equal to the uniform distribution if missing, or to observed value if not
+        #Impute x: first create x' (x_hash) to model the distribution of a given x variable, conditional on other x variables
+        #then set x_imp equal to x_hash if x is missing, and equal to x if it isn't
+
+        #Outer for loop here builds regression models to impute each of the J independent variables
         for(j in 1:J){
+          #The code I really want to use here is R-style minus signs to exclude rows from a matrix:
+          #mu[n,j] = inprod(x[n,-j], gamma[j,-j]) + gamma0[j]
+          #But it doesn't seem like JAGS supports this, so I instead create gamma_selected - equals gamma if on the off-diagonal, and zero on the diagonal
 
-          randomvar[n,j] ~ dunif(1,11)
-          x_imp[n,j] = missing[n,j] * randomvar[n,j] + (1 - missing[n,j]) * x[n,j]
+          mu[n,j] = inprod(x[n,], gamma_selected[j,]) + gamma0[j]
+          x_hash[n,j] ~ dnorm(mu[n,j], tau[j])
+          x_imp[n,j] = missing[n,j] * x_hash[n,j] + (1 - missing[n,j] * x[n,j])
         }
-
     }
 
-    for(j in 1:J){
-        beta[j] ~ dnorm(0, 0.01)
+    #====Initialize model-level parameters====
+    beta0 ~ dnorm(0, 0.01)
+
+    for(j1 in 1:J){
+        #Currently, this assumes independence of betas, which could be a problematic assumption - try specifying a multivariate normal distribution instead
+        beta[j1] ~ dnorm(0, 0.01)
+
+        #Tau is the standard deviation of the normal distribution relating Bx[-j] to x[j] in the imputation
+        tau[j1] ~ dgamma(0.001, 0.001)
+
+        #Gamma are the betas relating x[-j] to x[j] in the imputation
+        gamma0[j1] ~ dnorm(0, .001)
+        for(j2 in 1:J){
+            gamma[j1,j2] ~ dnorm(0, .001)
+            gamma_selected[j1,j2] = gamma[j1,j2] * ZeroDiagonal[j1,j2]
+        }
     }
 
 }

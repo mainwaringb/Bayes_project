@@ -101,7 +101,14 @@ jags_reg.bin3 <- jags.model(file = "JAGS Models/bin3.bugs", data = jags_data.bin
 #Not sure how to do this
 
 jags_data.bin4 <- jags_data.bin2
+jags_data.bin4$x <- jags_data.bin2$x[,2:3]
+jags_data.bin4$J <- jags_data.bin2$J - 1
 jags_data.bin4$missing <- is.na(jags_data.bin2$x)
 
 jags_reg.bin4 <- jags.model(file = "JAGS Models/bin4.bugs", data = jags_data.bin4, n.chains = 3)
+
+jags_data.bin4_alt <- jags_data.bin4
+jags_data.bin4_alt$ZeroDiagonal <- 1 - diag(jags_data.bin4$J)
+
+jags_reg.bin4_alt <- jags.model(file = "JAGS Models/bin4_alt.bugs", data = jags_data.bin4_alt, n.chains = 3)
 
