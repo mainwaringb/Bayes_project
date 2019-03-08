@@ -3,14 +3,14 @@ model{
         ystar[n] = inprod(x[n,],beta[])
         logit(p[n]) = ystar[n]
         y[n] ~ dbern(p[n])
-        
+
         #manually impute missing x's for only a single variable, x2 = fav_afd
         x[n, 2] ~ dnorm(mu[n], tau)
         mu[n] = gamma[1] + gamma[2] * x[n, 3]
     }
-    
+
     for(j in 1:J){
-        beta[j] ~ dnorm(0, 0.01)
+        beta[j] ~ dnorm(0, 0.01) #or could use dmnorm to specify correlated priors - see code for multilevel model
     }
 
     gamma[1] ~ dnorm(0, 0.01)

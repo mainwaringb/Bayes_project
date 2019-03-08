@@ -37,7 +37,7 @@ jags_data.bin1 <- with(preSurvey.valid_allvars, list(y = as.numeric(voteAfD_2017
                       N = length(voteAfD_2017)))
 
 #Compile model
-jags_reg.bin1 <- jags.model(file = "jags_model.bin1.bugs", data = jags_data.bin1,
+jags_reg.bin1 <- jags.model(file = "JAGS Models/bin1.bugs", data = jags_data.bin1,
                            n.chains = 3)
 
 #--Initial run--
@@ -71,7 +71,7 @@ summary(jags_out_df.bin1$Beta1 - jags_out_df.bin1$Beta2)
 PreSurvey.valid_dv <- subset(preSurvey, !is.na(voteAfD_2017))
 jags_data.bin2 <- makeJagsData(df = PreSurvey.valid_dv)
 
-jags_reg.bin2 <- jags.model(file = "jags_model.bin2.bugs", data = jags_data.bin2, n.chains = 3)
+jags_reg.bin2 <- jags.model(file = "JAGS Models/bin2.bugs", data = jags_data.bin2, n.chains = 3)
 
 #--Run and examine model--
 
@@ -90,7 +90,7 @@ gelman.plot(jags_out.bin2)
 PreSurvey.valid_twovar <- subset(preSurvey, !is.na(voteAfD_2017) & !is.na(q55d_recode))
 jags_data.bin3 <- makeJagsData(df = PreSurvey.valid_twovar)
 
-jags_reg.bin3 <- jags.model(file = "jags_model.bin3.bugs", data = jags_data.bin2, n.chains = 3)
+jags_reg.bin3 <- jags.model(file = "JAGS Models/bin3.bugs", data = jags_data.bin3, n.chains = 3)
 
 #Since I'm not that interested in single-variable, I'm going to push forward now that the model compiles - rather than look substantively at the model
 
@@ -100,32 +100,8 @@ jags_reg.bin3 <- jags.model(file = "jags_model.bin3.bugs", data = jags_data.bin2
 #I think this means I need to somehow tell JAGS to use a previous estimate of x2 for imputing x1
 #Not sure how to do this
 
-jags_model.bin4 <- "model{
-    for(n in 1:N){
-        ystar[n] = inprod(x[n,],beta[])
-        logit(p[n]) = ystar[n]
-        y[n] ~ dbern(p[n])
-        
-        #manually impute missing x's for only a single variable, x2 = fav_afd
-        x[n, 2] ~ dnorm(muA[n], tauA)
-        muA[n] = gammaA[1] + gammaA[2] * x[n, 3]
-        x[n, 3] ~ dnorm(muB[n], tauB)
-        muB[n] = gammaB[1] + gammaB[2] * x[n, 2]
-    }
-    
-    for(j in 1:J){
-        beta[j] ~ dnorm(0, 0.01)
-    }
-    
-    gammaA[1] ~ dnorm(0, 0.01)
-    gammaA[2] ~ dnorm(0, 0.01)
-    gammaB[1] ~ dnorm(0, 0.01)
-    gammaB[2] ~ dnorm(0, 0.01)
+jags_data.bin4 <- jags_data.bin2
+jags_data.bin4$missing <- is.na(jags_data.bin2$x)
 
-    tauA ~ dgamma(0.001, 0.001)
-    tauB ~ dgamma(0.001, 0.001)
-}"
-write(jags_model.bin4, "jags_model.bin4.bugs")
-
-jags_reg.bin4 <- jags.model(file = "jags_model.bin4.bugs", data = jags_data.bin2, n.chains = 3)
+jags_reg.bin4 <- jags.model(file = "JAGS Models/bin4.bugs", data = jags_data.bin4, n.chains = 3)
 

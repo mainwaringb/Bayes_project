@@ -1,0 +1,40 @@
+model{
+    for(n in 1:N){
+        ystar[n] = inprod(x_imp[n,],beta[])
+        logit(p[n]) = ystar[n]
+        y[n] ~ dbern(p[n])
+
+        #JAGS is complaining if it encounters NAs, so let's fill these in with a uniform distribution
+        x[n,2] ~ dunif(1,11)
+        x[n,3] ~ dunif(1,7)
+
+        #Impute x0: Set x_imp[,1] equal to one
+        randomvar[n,1] ~ dunif(1,11)
+        x_imp[n,1] = 1
+
+        #Impute x1: set x_imp[,2] equal to a semi-serious imputation model, with a stochastic component and deterministic component based on x2
+        mu2[n] = gamma02 + gamma12 * x[n,3]
+        randomvar[n,2] ~ dnorm(mu2[n], tau2)
+        x_imp[n,2] = missing[n,2] * randomvar[n,2] + (1 - missing[n,2]) * x[n,2]
+
+        #Impute x2 using uniform distribution
+        mu3[n] = gamma03 + gamma13 * x[n,2]
+        randomvar[n,3] ~ dnorm(mu3[n], tau3)
+        x_imp[n,3] = missing[n,3] * randomvar[n,3] + (1 - missing[n,3]) * x[n,3]
+
+
+    }
+
+    for(j in 1:J){
+        beta[j] ~ dnorm(0, 0.01)
+    }
+
+    gamma02 ~ dnorm(0, .001)
+    gamma12 ~ dnorm(0, .001)
+    gamma03 ~ dnorm(0, .001)
+    gamma13 ~ dnorm(0, .001)
+
+    tau2 ~ dgamma(0.001, 0.001)
+    tau3 ~ dgamma(0.001, 0.001)
+
+}

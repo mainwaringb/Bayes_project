@@ -1,0 +1,24 @@
+model{
+    for(n in 1:N){
+        ystar[n] = inprod(x_imp[n,],beta[])
+        logit(p[n]) = ystar[n]
+        y[n] ~ dbern(p[n])
+
+        #JAGS is complaining if it encounters NAs, so let's fill these in with a uniform distribution
+        x[n,2] ~ dunif(1,11)
+        x[n,3] ~ dunif(1,7)
+
+        #Set x_imp equal to the uniform distribution if missing, or to observed value if not
+        for(j in 1:J){
+
+          randomvar[n,j] ~ dunif(1,11)
+          x_imp[n,j] = missing[n,j] * randomvar[n,j] + (1 - missing[n,j]) * x[n,j]
+        }
+
+    }
+
+    for(j in 1:J){
+        beta[j] ~ dnorm(0, 0.01)
+    }
+
+}
