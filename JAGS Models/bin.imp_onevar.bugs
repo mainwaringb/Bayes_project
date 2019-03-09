@@ -10,7 +10,8 @@ model{
     }
 
     for(j in 1:J){
-        beta[j] ~ dnorm(0, 0.01) #or could use dmnorm to specify correlated priors - see code for multilevel model
+        #beta[j] ~ dnorm(0, 0.01) #or could use dmnorm to specify correlated priors - see code for multilevel model
+        beta
     }
 
     gamma[1] ~ dnorm(0, 0.01)
