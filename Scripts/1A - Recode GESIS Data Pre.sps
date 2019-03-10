@@ -26,11 +26,13 @@ VALUE LABELS eligible_2017 1 "Eligible to vote in 2017" 2 "Not eligible to vote 
 
 
 *---PastVote and political questions---.
-
-COMPUTE vote2_2017 = q12ba.
-IF(q10 = 2 OR MISSING(q10)) vote2_2017 = 99.
+MISSING VALUES q10 q11ba q12ba ().
+COMPUTE vote2_2017 = q11ba.
+IF(q10 = 5 OR q10 = 4 OR q10 = -97) vote2_2017 = 99.
+IF(q10 = 6) vote2_2017 = q12ba.
+RECODE vote2_2017 (801 = 96) (322 = 8) (-83 = 99).
 IF(MISSING(vote2_2017)) vote2_2017 = 97.
-RECODE vote2_2017 (801 = 96) (322 = 8).
+
 VALUE LABELS vote2_2017 1 "CDU/CSU" 4 "SPD" 5 "FDP" 6 "Green" 7 "Left" 8 "AfD" 96 "Other" 97 "Ref/NA" 99 "Abstain".
 
 RECODE vote2_2017 (8 = 1) (1 THRU 7 = 0 ) (96 = 0) (97 = SYSMIS) (99 = SYSMIS)  INTO voteAfD_2017.

@@ -1,0 +1,20 @@
+model{
+    for(n in 1:N){
+        ystar[n] = inprod(x[n,],beta[]) + beta0
+        logit(p[n]) = ystar[n]
+        y[n] ~ dbern(p[n])
+
+        #Need to manually specify imputation, since the variables have different bounds
+        #alternatively I could create a vector that lists upper and lower bounds, and loop through this
+
+        x[n,1] ~ dunif(1,11)
+        x[n,2] ~ dunif(1,7)
+    }
+
+    #If I'm using flat priors, I can just set them all here
+    beta0 ~ dnorm(0, .001)
+    for(j in 1:J){
+        beta[j] ~ dnorm(0, 0.001)
+    }
+
+}

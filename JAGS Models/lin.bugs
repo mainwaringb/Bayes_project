@@ -1,0 +1,12 @@
+model{
+    for(n in 1:N){
+        y[n] ~ dnorm(mu[n], tau)
+        mu[n] <- inprod(x[n,],beta[])
+    }
+
+    for(j in 1:J){
+        beta[j] ~ dnorm(B_mean[j], B_var[j,j])
+    }
+
+    tau ~ dgamma(.001, .001)
+}

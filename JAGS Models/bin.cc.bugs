@@ -1,0 +1,13 @@
+model{
+    for(i in 1:N){
+        ystar[i] = Beta0 + inprod(Beta, x[i,])
+        logit(p[i]) = ystar[i]
+        y[i] ~ dbern(p[i])
+    }
+
+    Beta0 ~ dnorm(0, 0.01)
+    for(i in 1:J){
+        Beta[i] ~ dnorm(0, .001)
+    }
+
+}
