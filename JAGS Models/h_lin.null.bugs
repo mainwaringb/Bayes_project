@@ -1,0 +1,32 @@
+#Hierarchical model with no group-level predictors
+
+model{
+
+  #Define y
+  for(n in 1:N){
+    #mu.y is a combination of:
+    # A) individual-level predictor variables contained in the "x" matrix
+    # B) a group-level slope, alpha
+    mu.y[n] <- inprod(x[n,], beta[]) + alpha[group_index[n]]
+
+    y[n] ~ dnorm(mu.y[n], tau.y)
+  }
+
+  #Define group-level intercept
+  for(q in 1:Q){
+    alpha[q] ~ dnorm(mu.a, tau.a)
+  }
+
+  #Define betas
+  for(j in 1:J){
+    beta[j] ~ dnorm(B_mean[j], B_var[j])
+  }
+
+  #For some reason, the gamma distribution here is requiring three parameters
+  #My (untested) assumption is that JAGS is confusing dgamma with dggamma, the generalized dgamma
+  #As per JAGS documentation, a generalized gamma with third parameter equal to one simplifies to a gamma
+  tau.y <- dgamma(.01, .01, 1)
+
+  mu.a ~ dnorm(0, 0.01)
+  tau.a <- dgamma(.01, .01, 1)
+}

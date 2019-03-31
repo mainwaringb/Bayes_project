@@ -1,0 +1,52 @@
+﻿EnglishTrans,GermanOrig,EnglishShort
+Constituency no.,Wahlkreis-Nr.,WahlkreisNr
+Constituency Name,Wahlkreis-Name,WahlkreisName
+Municipalities on 31.12.2015 (number),Gemeinden am 31.12.2015 (Anzahl),NumMunicipalities
+Surface on 31.12.2015 (km²),Fläche am 31.12.2015 (km²),SurfaceArea
+Population on 31.12.2015 - Total (in 1000),Bevölkerung am 31.12.2015 - Insgesamt (in 1000),Pop_Total_Cout
+Population on 31.12.2015 - Germans (in 1000),Bevölkerung am 31.12.2015 - Deutsche (in 1000),Pop_Germans_Count
+Population on 31.12.2015 - Foreigners (%),Bevölkerung am 31.12.2015 - Ausländer (%),Pop_Foreigners_Pct
+Population on 31.12.2015 (inhabitants per km²),Bevölkerungsdichte am 31.12.2015 (Einwohner je km²),PopDensity
+Increase (+) or decrease (-) of the population 2015 - Birth balance (per 1000 inhabitants),Zu- (+) bzw. Abnahme (-) der Bevölkerung 2015 - Geburtensaldo (je 1000 Einwohner),BirthBalance
+Increase (+) or decrease (-) in population 2015 - Migration balance (per 1000 inhabitants),Zu- (+) bzw. Abnahme (-) der Bevölkerung 2015 - Wanderungssaldo (je 1000 Einwohner),MigrationBalance
+Age from ... to ... years on 31.12.2015 - below 18 (%),Alter von ... bis ... Jahren am 31.12.2015 - unter 18 (%),Age_Under18_Pct
+Age from ... to ... years on 31.12.2015 - 18-24 (%),Alter von ... bis ... Jahren am 31.12.2015 - 18-24 (%),Age_18_24_Pct
+Age from ... to ... years on 31.12.2015 - 25-34 (%),Alter von ... bis ... Jahren am 31.12.2015 - 25-34 (%),Age_25_34_Pct
+Age from ... to ... years on 31.12.2015 - 35-59 (%),Alter von ... bis ... Jahren am 31.12.2015 - 35-59 (%),Age_35_59_Pct
+Age from ... to ... years on 31.12.2015 - 60-74 (%),Alter von ... bis ... Jahren am 31.12.2015 - 60-74 (%),Age_60_74_Pct
+Age from ... to ... years on 31.12.2015 - 75 and more (%),Alter von ... bis ... Jahren am 31.12.2015 - 75 und mehr (%),Age_75Plus_Pct
+"Census 2011, population according to migration background on 09.05.2011 - without migration background (%)","Zensus 2011, Bevölkerung nach Migrationshintergrund am 09.05.2011 - ohne Migrationshintergrund (%)",MigrantBackground_No_Pct
+"Census 2011, population by migration background on 09.05.2011 - with a migration background (%)","Zensus 2011, Bevölkerung nach Migrationshintergrund am 09.05.2011 - mit Migrationshintergrund (%)",MigrantBackground_Yes_Pct
+"Census 2011, population by religious affiliation on 09.05.2011 - Roman Catholic Church (%)","Zensus 2011, Bevölkerung nach Religionszugehörigkeit am 09.05.2011 - Römisch-katholische Kirche (%)",Rel_Catholic_Pct
+"Census 2011, population by religious affiliation on 09.05.2011 - Protestant Church (%)","Zensus 2011, Bevölkerung nach Religionszugehörigkeit am 09.05.2011 - Evangelische Kirche (%)",Rel_Protestant_Pct
+"Census 2011, population by religious affiliation on 09.05.2011 - Other, none, without indication (%)","Zensus 2011, Bevölkerung nach Religionszugehörigkeit am 09.05.2011 - Sonstige, keine, ohne Angabe (%)",Rel_None_Pct
+"Census 2011, apartments in residential buildings on 09.05.2011 - owner quota","Zensus 2011, Wohnungen in Wohngebäuden am 09.05.2011 - Eigentümerquote",Housing_OwnerQuota_Per1000
+Construction and Housing - Finished apartments 2014 (per 1000 inhabitants),Bautätigkeit und Wohnungswesen - Fertiggestellte Wohnungen 2014 (je 1000 Einwohner),Housing_FinishedApts_Per1000
+Construction and Housing - Stock of flats on 31.12.2015 (per 1000 inhabitants),Bautätigkeit und Wohnungswesen - Bestand an Wohnungen am 31.12.2015 (je 1000 Einwohner),Housing_FlatStock_Per1000
+Household income available in 2014 (€ per capita),Verfügbares Einkommen der privaten Haushalte 2014 (€ je Einwohner),HHInc_PerCap
+Gross domestic product 2014 (€ per inhabitant),Bruttoinlandsprodukt 2014 (€ je Einwohner),GDP_PerCap
+Vehicle stock on 01.01.2016 (per 1000 inhabitants),Kraftfahrzeugbestand am 01.01.2016 (je 1000 Einwohner),Vehicles_Per1000
+Graduates of vocational schools 2015,Absolventen/Abgänger beruflicher Schulen 2015,Educ_VocGrad
+Graduates / graduates of general education schools 2015 - in total without external persons (per 1000 inhabitants),Absolventen/Abgänger allgemeinbildender Schulen 2015 - insgesamt ohne Externe (je 1000 Einwohner),Educ_GenGrad_Per1000
+Graduates of general education schools 2015 - without Hauptschulabschluss (%),Absolventen/Abgänger allgemeinbildender Schulen 2015 - ohne Hauptschulabschluss (%),Educ_Hauptschule_No_Pct
+Graduates of general education schools 2015 - with secondary school diploma (%),Absolventen/Abgänger allgemeinbildender Schulen 2015 - mit Hauptschulabschluss (%),Educ_Hauptschule_Yes_Pct
+Graduates of general education schools 2015 - with a middle school diploma (%),Absolventen/Abgänger allgemeinbildender Schulen 2015 - mit mittlerem Schulabschluss (%),Educ_Intermediate_Pct
+Graduates of general education schools 2015 - with general and college entrance qualification (%),Absolventen/Abgänger allgemeinbildender Schulen 2015 - mit allgemeiner und Fachhochschulreife (%),Educ_Fachhoch_Pct
+Kindertagesbetreuung: Supervised children on 01.03.2016 (per 1000 inhabitants),Kindertagesbetreuung: Betreute Kinder am 01.03.2016 (je 1000 Einwohner),Children_Per1000
+Business Register 2014 - Total companies (per 1000 inhabitants),Unternehmensregister 2014 - Unternehmen insgesamt (je 1000 Einwohner),Companies_Per1000
+Business Register 2014 - craft enterprises (per 1000 inhabitants),Unternehmensregister 2014 - Handwerksunternehmen (je 1000 Einwohner),CraftEnterprise_Per1000
+Employees subject to social insurance on 30.06.2016 - in total (per 1000 inhabitants),Sozialversicherungspflichtig Beschäftigte am 30.06.2016 - insgesamt (je 1000 Einwohner),SI_Total_Per1000
+"Employees subject to social insurance on 30.06.2016 - Agriculture, Forestry, Fisheries (%)","Sozialversicherungspflichtig Beschäftigte am 30.06.2016 - Land- und Forstwirtschaft, Fischerei (%)",SI_Ag_Pct
+Employees subject to social insurance on 30/06/2016 - Manufacturing sector (%),Sozialversicherungspflichtig Beschäftigte am 30.06.2016 - Produzierendes Gewerbe (%),Si_Mfg_Pct
+"Employees subject to social insurance on 30.06.2016 - Trade, Hospitality, Transport (%)","Sozialversicherungspflichtig Beschäftigte am 30.06.2016 - Handel, Gastgewerbe, Verkehr (%)",SI_Service_Pct
+Social insurance employees on 30.06.2016 - Public and private service providers (%),Sozialversicherungspflichtig Beschäftigte am 30.06.2016 - Öffentliche und private Dienstleister (%),SI_OtherPrivate_Pct
+Employees subject to social insurance on 30.06.2016 - Other service providers and 'Unspecified' (%),Sozialversicherungspflichtig Beschäftigte am 30.06.2016 - Übrige Dienstleister und 'ohne Angabe' (%),SI_Other_Pct
+Recipients of benefits according to SGB II on 31.12.2016 - in total (per 1000 inhabitants),Empfänger(innen) von Leistungen nach SGB II am 31.12.2016 -  insgesamt (je 1000 Einwohner),Benefits_Total_Per1000
+Recipients of benefits according to SGB II on 31.12.2016 - non-workable persons in need of assistance (%),Empfänger(innen) von Leistungen nach SGB II am 31.12.2016 - nicht erwerbsfähige Hilfebedürftige (%),Benefits_NonWorking_Pct
+Recipients of benefits according to SGB II on 31.12.2016 - Foreigners (%),Empfänger(innen) von Leistungen nach SGB II am 31.12.2016 - Ausländer (%),Benefits_Foreigners_Pct
+Unemployment rate in March 2017 - total,Arbeitslosenquote März 2017 - insgesamt,Unemp_Tot
+Unemployment Rate March 2017 - Men,Arbeitslosenquote März 2017 - Männer,Unemp_M
+Unemployment Rate March 2017 - Women,Arbeitslosenquote März 2017 - Frauen,Unemp_F
+Unemployment rate March 2017 - 15 to under 20 years,Arbeitslosenquote März 2017 - 15 bis unter 20 Jahre,Unemp_Young
+Unemployment rate March 2017 - 55 to under 65 years,Arbeitslosenquote März 2017 - 55 bis unter 65 Jahre,Unemp_Old
+footnotes,Fußnoten,Footnotes
