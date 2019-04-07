@@ -1,0 +1,61 @@
+#Hierarchical model with group-level predictors, no random intercepts
+
+model{
+
+  #Create individual-level "outcome" variables
+  #This includes both y's (the actual outcome), and imputations for missing x
+  for(n in 1:N){
+      #Define y's here
+      mu.y[n] <- inprod(x_l0[n,], beta[]) + alpha[group_index[n]]
+      y[n] ~ dnorm(mu.y[n], tau.y)
+
+      #Impute missing X's here (only for individual-level variables)
+      #"imputematrix" is an argument passed to the model, where reach row specifies the variables that should be used to impute that rows
+      #For example, the first row of imputematrix tells us which other variables should be used to impute x1
+      for(j in 1:J){
+          #Arbitrarily fill out missing values of x with  uniform distribution, so JAGS doesn't complain
+          #(this gets thrown away and not used)
+          x_l0[n,j] ~ dunif(0,10)
+
+          #Create an imputation for every observation in the dataset, which is stored in x_hash
+          #Imputelist is a crude vector that defines which variables should be used in imputation - assuming this is constant across aimputations
+          mu.xmiss[n,j] <- inprod(x_l0[n,imputelist], beta.xmiss[j,imputelist]) + beta0.xmiss[j]
+          x_hash[n,j] ~ dnorm(mu.xmiss[n,j], tau.xmiss[j])
+
+          #Then create x_imp, from x_hash (where values are missing) and x_l0 (where values are observed)
+          x_imp[n,j] <- missing[n,j] * x_hash[n,j] + (1 - missing[n,j] * x_l0[n,j])
+
+          #For now, the imputation is ignoring group-level variables
+      }
+  }
+
+  #Define group-level intercept
+  for(q in 1:Q){
+      alpha[q] ~ dnorm(mu.a[q], tau.a)
+      mu.a[q] <- inprod(x_l1[q,], gamma[])
+  }
+
+  #Define individual-level betas (coefficients relating individual-level variables to outcome)
+  #This includes defining betas for the imputation
+  for(j in 1:J){
+      beta[j] ~ dnorm(B_mean[j], B_var[j])
+
+      beta0.xmiss[j] ~ dnorm(0, .01)
+      for(j2 in 1:J){
+          #specify an "initial" dnorm for each beta.xmiss, even for betas we ultimately don't want to use
+          #then set some betas to zero
+
+          beta.xmiss.init[j, j2] ~ dnorm(0, .01)
+          beta.xmiss[j, j2] <- beta.xmiss.init[j, j2] * imputematrix[j, j2]
+      }
+      tau.xmiss[j] <- dgamma(.01, .01, 1)
+  }
+
+  #Define group-level gammas (coefficients relating *group*-level variables to outcome)
+  for(k in 1:K){
+      gamma[k] ~ dnorm(G_mean[k], G_var[k])
+  }
+
+  tau.y <- dgamma(.01, .01, 1)
+  tau.a <- dgamma(.01, .01, 1)
+}
