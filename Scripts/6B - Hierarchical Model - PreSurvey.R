@@ -6,8 +6,11 @@ library(MCMCvis)
 source("Scripts/6A - Hierarchical Model - Prep.R")
 source("Scripts/MakeJagsData.R")
 load("Data/JAGS Output - pre-full imp.RData")
+load("Data/JAGS Output - pre-flat imp.RData")
 
 
+#Because these models are so time-consuming, set a flag to determine whether the model should actually be re-run
+runmodel <- FALSE
 
 
 ####---2.4. Full model with missing data (individual + group-level predictors); quasi-informed priors, specified independently---####
@@ -21,7 +24,7 @@ jags_data.pre_miss$x_l0 <- jags_data.pre_miss$x
 jags_data.pre_miss$x <- NULL
 jags_data.pre_miss$x_l1 <- kreiseData[kreiseData$WahlkreisNr %in% preSurvey.valid$wahlkreis_num,
                                       c("MigrantBackground_Yes_Pct",
-                                        "GDP_PerCap_1000", "Educ_UnivQualif_Pct", "Unemp_Tot", "Age_60plus")]
+                                        "GDP_PerCap_1000", "Educ_UnivQualif_Pct", "Unemp_Tot", "Age_60plus", "voteAfD")]
 jags_data.pre_miss$K <- length(jags_data.pre_miss$x_l1) #Get number of L1 variables
 
 #Create an index of groups, ranging from 1 to Q
@@ -33,8 +36,8 @@ jags_data.pre_miss$B_mean <- c(1.0, 0.5, 1.0, 0.0, 0.0, 1.0, -0.1)
 jags_data.pre_miss$B_var <-  c(0.2, 0.2, 0.2, 5.0, 5.0, 0.2, 1.0)
 
 #For L1 variables - assume that the interquartile range has a 1-pt effect on AfD favourability, and set standard deviation at 2.5x mean
-jags_data.pre_miss$G_mean <- c(0.0, -0.1, -0.1, 0.25, 0.2)
-jags_data.pre_miss$G_var <-  1 / (abs(c(0.2, -0.1, -0.1, 0.25, 0.2) * 2.5) ^ 2)
+jags_data.pre_miss$G_mean <- c(0.0, -0.1, -0.1, 0.25, 0.2, 0.33)
+jags_data.pre_miss$G_var <-  1 / (abs(c(0.2, -0.1, -0.1, 0.25, 0.2, 0.33) * 2.5) ^ 2)
 
 #Define imputtation matrix
 jags_data.pre_miss$imputematrix <- matrix(c(TRUE, TRUE, TRUE, FALSE, FALSE, TRUE, FALSE),
@@ -47,9 +50,12 @@ jags_data.pre_miss$imputelist <- c(1,2,3,6)
 
 #---2.4.2 Run model---
 
-jags_reg.pre_miss <- jags.model(file = "JAGS Models/h_lin_imp.ind.bugs", data = jags_data.pre_miss, n.chains = 3)
-update(jags_reg.pre_miss, 10000)
-jags_out.pre_miss <- coda.samples(model = jags_reg.pre_miss, variable.names = c("beta", "gamma"), n.iter = 50000, thin = 25)
+if(runmodel == TRUE){
+    jags_reg.pre_miss <- jags.model(file = "JAGS Models/h_lin_imp.ind.bugs", data = jags_data.pre_miss, n.chains = 3)
+    update(jags_reg.pre_miss, 10000)
+    jags_out.pre_miss <- coda.samples(model = jags_reg.pre_miss, variable.names = c("beta", "gamma"), n.iter = 50000, thin = 25)
+    save(jags_out.pre_miss, file = "Data/JAGS Output - pre-full imp.RData")
+}
 
 plot(jags_out.pre_miss)
 autocorr.plot(jags_out.pre_miss) #this behaves pretty well, except for severely autocrrelated age terms
@@ -73,12 +79,12 @@ summary.pre_miss$statistics[-c(4:5), 4] / summary.pre_miss$statistics[-c(4:5), 3
 
 summ.pre_miss <- summary(jags_out.pre_miss)
 coefnames <- c("B[educ.low]", "B[educ.med]", "B[gend.male]", "B[age]", "B[age ^ 2]", "B[unemp]", "B[income]",
-               "G[migrant.yes]", "G[income.high]", "G[educ.high]", "G[unemp]", "G[age.60+]")
+               "G[migrant.yes]", "G[income.high]", "G[educ.high]", "G[unemp]", "G[age.60+]", "G[vote.AfD]")
 rownames(summ.pre_miss$quantiles) <- coefnames
 rownames(summ.pre_miss$statistics) <- coefnames
 summ.pre_miss$quantiles
 
-#Gamma[1] has a median of -.02, with a 95% credibility interval from -.044 to +.006
+#Gamma[1] has a median of -.02, with a 95% credibility interval from -.042 to +.012
 #The level-1 variables with credibility intervals outside zero are gamma[2] and gamma[5]
 #GDP per capita is *positively* assocaited with AfD, as is older population
 
@@ -88,10 +94,10 @@ summ.pre_miss$quantiles
 #Surprisingly, unemployment is negatively associated with AfD support (-1.13, -.51)
 #The age variables both have credibility intervals that lie outside zero: age has a positive associated, and the square of age has a negative association
 
+par(mfrow = c(1,1))
 MCMCplot(jags_out.pre_miss, ref_ovl = TRUE) #this works - but coefficients are on such different scales that the plot can be hard to read
 #in particular, it's hard to tell that gamma2, beta4, and beta5 have credibility intervals outside 0
 
-save(jags_out.pre_miss, file = "Data/JAGS Output - pre-full imp.RData")
 
 
 #---2.4.4 Check covariance matrix---
@@ -109,9 +115,9 @@ colnames(corr.pre_miss) <- coefnames
 #View correlations
 corr.pre_miss
 
-#strong correlations in betas: beta1 and beta2 (.54), beta4 and beta5 (-.98)
-#to a lesser extent - beta1 and beta7 (.31), beta1 and gamma5 (.15), beta4 and beta7 (-.20)
-    #beta5 and gamma5 (.35), beta6 and beta7 (.20)
+#strong correlations in betas: beta1 and beta2 (.56), beta4 and beta5 (-.98)
+#to a lesser extent - beta1 and beta7 (.30), beta1 and gamma5 (-.15), beta4 and beta7 (-.21)
+    #beta5 and gamma5 (.27), beta6 and beta7 (.19)
 #Generally speaking, beta7 tends to have high correlations with other variables, and gamma5 has quite high correlations with betas
 #Correlations amongst gammas are all massively high, many in the +-.4 range
 
@@ -126,13 +132,16 @@ jags_data.pre_flat_miss <- jags_data.pre_miss
 
 #Define flat priors for L0 variables
 jags_data.pre_flat_miss$B_var <- c(0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001)
-jags_data.pre_flat_miss$G_var <-  c(0.001, 0.001, 0.001, 0.001, .001)
+jags_data.pre_flat_miss$G_var <-  c(0.001, 0.001, 0.001, 0.001, .001, .001)
 
 #2.5.2 Run and examine model
 
-jags_reg.pre_flat_miss <- jags.model(file = "JAGS Models/h_lin_imp.ind.bugs", data = jags_data.pre_flat_miss, n.chains = 3)
-update(jags_reg.pre_flat_miss, 10000)
-jags_out.pre_flat_miss <- coda.samples(model = jags_reg.pre_flat_miss, variable.names = c("beta", "gamma"), n.iter = 50000, thin = 25)
+if(runmodel == TRUE){
+    jags_reg.pre_flat_miss <- jags.model(file = "JAGS Models/h_lin_imp.ind.bugs", data = jags_data.pre_flat_miss, n.chains = 3)
+    update(jags_reg.pre_flat_miss, 10000)
+    jags_out.pre_flat_miss <- coda.samples(model = jags_reg.pre_flat_miss, variable.names = c("beta", "gamma"), n.iter = 50000, thin = 25)
+    save(jags_out.pre_flat_miss, file = "Data/JAGS Output - pre-flat imp.RData")
+}
 
 plot(jags_out.pre_flat_miss)
 autocorr.plot(jags_out.pre_flat_miss) #beta4 and beta5 here are massively autocorrelated
@@ -143,8 +152,6 @@ rownames(summ.pre_flat_miss$quantiles) <- coefnames
 rownames(summ.pre_flat_miss$statistics) <- coefnames
 summ.pre_flat_miss
 
-save(jags_out.pre_flat_miss, file = "Data/JAGS Output - pre-flat imp.RData")
-load("Data/JAGS Output - pre-flat imp.RData")
 
 #2.5.3 Export covariance matrix and coefficient means (I don't think I'll be using it, but just in case)
 
