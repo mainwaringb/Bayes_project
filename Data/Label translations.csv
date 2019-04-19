@@ -3,7 +3,7 @@ Constituency no.,Wahlkreis-Nr.,WahlkreisNr
 Constituency Name,Wahlkreis-Name,WahlkreisName
 Municipalities on 31.12.2015 (number),Gemeinden am 31.12.2015 (Anzahl),NumMunicipalities
 Surface on 31.12.2015 (km²),Fläche am 31.12.2015 (km²),SurfaceArea
-Population on 31.12.2015 - Total (in 1000),Bevölkerung am 31.12.2015 - Insgesamt (in 1000),Pop_Total_Cout
+Population on 31.12.2015 - Total (in 1000),Bevölkerung am 31.12.2015 - Insgesamt (in 1000),Pop_Total_Count
 Population on 31.12.2015 - Germans (in 1000),Bevölkerung am 31.12.2015 - Deutsche (in 1000),Pop_Germans_Count
 Population on 31.12.2015 - Foreigners (%),Bevölkerung am 31.12.2015 - Ausländer (%),Pop_Foreigners_Pct
 Population on 31.12.2015 (inhabitants per km²),Bevölkerungsdichte am 31.12.2015 (Einwohner je km²),PopDensity
@@ -31,7 +31,7 @@ Graduates / graduates of general education schools 2015 - in total without exter
 Graduates of general education schools 2015 - without Hauptschulabschluss (%),Absolventen/Abgänger allgemeinbildender Schulen 2015 - ohne Hauptschulabschluss (%),Educ_Hauptschule_No_Pct
 Graduates of general education schools 2015 - with secondary school diploma (%),Absolventen/Abgänger allgemeinbildender Schulen 2015 - mit Hauptschulabschluss (%),Educ_Hauptschule_Yes_Pct
 Graduates of general education schools 2015 - with a middle school diploma (%),Absolventen/Abgänger allgemeinbildender Schulen 2015 - mit mittlerem Schulabschluss (%),Educ_Intermediate_Pct
-Graduates of general education schools 2015 - with general and college entrance qualification (%),Absolventen/Abgänger allgemeinbildender Schulen 2015 - mit allgemeiner und Fachhochschulreife (%),Educ_Fachhoch_Pct
+Graduates of general education schools 2015 - with general and college entrance qualification (%),Absolventen/Abgänger allgemeinbildender Schulen 2015 - mit allgemeiner und Fachhochschulreife (%),Educ_UnivQualif_Pct
 Kindertagesbetreuung: Supervised children on 01.03.2016 (per 1000 inhabitants),Kindertagesbetreuung: Betreute Kinder am 01.03.2016 (je 1000 Einwohner),Children_Per1000
 Business Register 2014 - Total companies (per 1000 inhabitants),Unternehmensregister 2014 - Unternehmen insgesamt (je 1000 Einwohner),Companies_Per1000
 Business Register 2014 - craft enterprises (per 1000 inhabitants),Unternehmensregister 2014 - Handwerksunternehmen (je 1000 Einwohner),CraftEnterprise_Per1000

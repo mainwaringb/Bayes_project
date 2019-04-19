@@ -1,10 +1,8 @@
 rm(list = ls())
 library(foreign)
-library(rjags)
 
 preSurvey <- read.spss("Data/Pre-Election - Processed.sav", to.data.frame = TRUE)
 postSurvey <- read.spss("Data/Post-Election - Processed.sav", to.data.frame = TRUE)
-source("Scripts/makeJagsData.R")
 
 
 ####---1.1 Import Kreise Data---###
@@ -17,18 +15,7 @@ kreiseDataLabels <- read.csv("Data/Label translations.csv", stringsAsFactors = F
 names(kreiseData)[-1] <- kreiseDataLabels$EnglishShort
 kreiseData$GDP_PerCap_1000 <- kreiseData$GDP_PerCap / 1000 #Rescale for interpretability
 kreiseData$Age_60plus <- kreiseData$Age_60_74_Pct + kreiseData$Age_75Plus_Pct
-
-#Inspect potentially useful variables
-summary(kreiseData$Pop_Foreigners_Pct)
-summary(kreiseData$MigrantBackground_Yes_Pct)
-summary(kreiseData$GDP_PerCap_1000)
-summary(kreiseData$Educ_Fachhoch_Pct) 
-summary(kreiseData$Unemp_Tot)
-summary(kreiseData$Age_60plus)
-
-#Check correlations between selected variables
-with(kreiseData, cor(cbind(GDP_PerCap_1000, Educ_Fachhoch_Pct, Unemp_Tot, Pop_Foreigners_Pct, MigrantBackground_Yes_Pct), use = "pairwise.complete.obs"))
-
+kreiseData <- kreiseData[kreiseData$WahlkreisNr < 900,]
 
 ####---1.2. Merge Kreise Data---####
 
