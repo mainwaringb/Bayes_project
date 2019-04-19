@@ -7,7 +7,8 @@ postSurvey <- read.spss("Data/Post-Election - Processed.sav", to.data.frame = TR
 
 ####---1.1 Import Kreise Data---###
 
-#Import kreise data
+##--1.1.1---Import kreise demographic data
+#This is a *relatively* easy import
 kreiseData <- read.table("Data/btw17_strukturdaten.txt", 
                          sep = ";", skip = 8, dec = ",", fileEncoding = "WINDOWS-1258",
                          stringsAsFactors = FALSE,  header = TRUE, na.strings = ".")
@@ -17,7 +18,33 @@ kreiseData$GDP_PerCap_1000 <- kreiseData$GDP_PerCap / 1000 #Rescale for interpre
 kreiseData$Age_60plus <- kreiseData$Age_60_74_Pct + kreiseData$Age_75Plus_Pct
 kreiseData <- kreiseData[kreiseData$WahlkreisNr < 900,]
 
+##--1.1.2---Import kreise voting data
+#This is more difficult, since we have a CSV files that is essentially designed to look good in Excel but isn't very machine-readable
+electionResults.names <- read.table("Data/btw17_kerg.csv", skip = 5, nrow = 3,
+                                            sep = ";", dec = ",", fileEncoding = "UTF-8",
+                                            stringsAsFactors = FALSE,  header = FALSE, na.strings = ".", fill = TRUE)
+electionResults.data <- read.table("Data/btw17_kerg.csv", skip = 8, 
+                                   sep = ";", dec = ",", fileEncoding = "UTF-8",
+                                   stringsAsFactors = FALSE,  header = FALSE, na.strings = ".", fill = TRUE)
+electionResults.data <- electionResults.data[,-192] #drop phantom column
+
+#These are the names of the parties - each party takes four cells
+#I am just hardcoding in my knowledge that the 1st two columns are "first vote" in the current and previous elections, and the second two columns as "second vote" in the current and previous elections
+#A slightly more sophisticated approach would pull names the from the second and third rows of electionResults.names
+electionResults.goodnames <- as.vector(sapply(electionResults.names[1, seq(from = 4, to = 188, by = 4)], function(x) paste0(x, c(".1.cur", ".1.prev", ".2.cur", ".2.prev"))))
+names(electionResults.data)[4:191] <- electionResults.goodnames
+names(electionResults.data)[1:3] <- c("Nr", "Gebiet", "gehört zu")
+
+#Drop blank rows, and those that contain state totals
+electionResults.data <- electionResults.data[electionResults.data$`gehört zu` != 99 & !is.na(electionResults.data$`gehört zu`),]
+voteAfD <- data.frame(Nr = electionResults.data$Nr, voteAfD = electionResults.data$Wahlberechtigte.2.cur / electionResults.data$`Alternative für Deutschland.2.cur`)
+
 ####---1.2. Merge Kreise Data---####
+
+##--1.2.---Merge kreise demographic and voting data
+kreiseData <- merge(x = kreiseData, y = voteAfD, by.x = "WahlkreisNr", by.y = "Nr")
+
+##--1.2.2---Merge kreise data with individual data
 
 #The structure of JAGS means that we don't actually use the merged data - however, we do need it for LMER, and a few miscellaneous purposes
 #The GESIS data includes a factor variable with both name and numer in one variable

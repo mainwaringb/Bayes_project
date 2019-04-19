@@ -121,7 +121,6 @@ save(cov.pre_miss, summ.pre_miss, file = "Data/Covariance + Mean - pre-full imp.
 
 ####---2.5. Full model with missing data (individual + group-level predictors); flat priors, specified independently---####
 
-
 #2.5.1 Copy intitial object, and alter priors
 jags_data.pre_flat_miss <- jags_data.pre_miss
 
