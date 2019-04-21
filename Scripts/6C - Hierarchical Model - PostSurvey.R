@@ -16,10 +16,10 @@ burnin <- 35000
 iterations <- 10000000
 thin <- 125
 
+#Full model with missing data (individual + group-level predictors); specified via multivariate normal
 
-####---3.1. Full model with missing data (individual + group-level predictors); specified via multivariate normal---####
+####---3.1 Define data and model specs ---####
 
-#---3.1.1 Define data and model specs ---
 #Create initial data object, for individual-level data
 jags_data.post_miss <- makeJagsData(df = postSurvey.merged,  ivs = c("education_1", "education_2", "gender", "age", "age_sq", "hh_unemp", "income"), dv = "Fav_AfD", addConstant = FALSE, J = FALSE)
 
@@ -46,7 +46,7 @@ jags_data.post_miss$beta_index <- 1:7 #Specify which elements of the "betagamma"
 jags_data.post_miss$gamma_index <- 8:13 #Specify which elements of the "betagamma" coefficient vector are gammas (group-level)
 
 
-#---2.4.2 Run model---
+####---3.2 Run model---####
 
 #This initial run was used for diangostics, but proved far too short
 # if(runmodel == TRUE){
@@ -81,7 +81,7 @@ autocorr.plot(jags_out.post_miss) #grautocorrelation is still a massive issue - 
 gelman.plot(jags_out.post_miss) #shrink factor appears to settle down after around 100k-150k iterations on gammas
 
 
-#---2.4.3 Inspect model in more depth---
+####---3.3 Inspect model in more depth---###
 
 summ.post_miss <- summary(jags_out.post_miss)
 summ.post_miss$quantiles
@@ -94,10 +94,11 @@ autocorr.plot(jags_out.post_miss[[1]][,c(8:13)], auto.layout = FALSE)
 
 #Compare very well-behaved Markov chain with slightly-less-well-behaved one
 plot(jags_out.post_miss[,c(1,5)], trace = TRUE, density = FALSE)
-
 plot(jags_out.post_miss[,5], trace = TRUE, density = FALSE, main = "Trace of B[age ^ 2]")
 plot(jags_out.post_miss[,1], trace = TRUE, density = FALSE, main = "Trace of B[educ.low]")
 
+
+####---3.4 Visualise and discuss results---####
 
 
 MCMCplot(jags_out.post_miss, ref_ovl = TRUE) #this works - but coefficients are on such different scales that the plot can be hard to read
