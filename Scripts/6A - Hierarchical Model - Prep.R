@@ -84,4 +84,9 @@ validcases.post <- !is.na(postSurvey.merged$age)  & !is.na(postSurvey.merged$inc
 postSurvey.valid <- postSurvey.merged[validcases.post,]
 
 
+####---1.4. Clean up unneeded data---####
+rm(electionResults.data, electionResults.names, electionResults.goodnames, voteAfD,
+   kreiseDataLabels,
+   validcases.pre, validcases.post,
+   preSurvey, postSurvey)
 

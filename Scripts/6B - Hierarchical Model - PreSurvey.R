@@ -17,19 +17,18 @@ runmodel <- FALSE
 
 #---2.4.1 Define data and priors---
 #Create initial data object, for individual-level data
-jags_data.pre_miss <- makeJagsData(df = preSurvey.merged,  ivs = c("education_1", "education_2", "gender", "age", "age_sq", "hh_unemp", "income"), dv = "Fav_AfD", addConstant = FALSE, J = TRUE)
+jags_data.pre_miss <- makeJagsData(df = preSurvey.merged,  ivs = c("education_1", "education_2", "gender", "age", "age_sq", "hh_unemp", "income"), dv = "Fav_AfD", addConstant = FALSE, J = FALSE)
 
 #Rename "x" vector to specify l0 (individual-level) predictor variables, and add l1 (group-level) predictor variables
-jags_data.pre_miss$x_l0 <- jags_data.pre_miss$x
-jags_data.pre_miss$x <- NULL
+names(jags_data.pre_miss)[2] <- "x_l0"
 jags_data.pre_miss$x_l1 <- kreiseData[kreiseData$WahlkreisNr %in% preSurvey.valid$wahlkreis_num,
                                       c("MigrantBackground_Yes_Pct",
                                         "GDP_PerCap_1000", "Educ_UnivQualif_Pct", "Unemp_Tot", "Age_60plus", "voteAfD")]
-jags_data.pre_miss$K <- length(jags_data.pre_miss$x_l1) #Get number of L1 variables
+#jags_data.pre_miss$K <- length(jags_data.pre_miss$x_l1) #Get number of L1 variables
 
 #Create an index of groups, ranging from 1 to Q
 jags_data.pre_miss$group_index <- as.numeric(factor(preSurvey.merged$wahlkreis_num))
-jags_data.pre_miss$Q <- max(jags_data.pre_miss$group_index)
+#jags_data.pre_miss$Q <- max(jags_data.pre_miss$group_index)
 
 #Define semi-informative priors for L0 variables
 jags_data.pre_miss$B_mean <- c(1.0, 0.5, 1.0, 0.0, 0.0, 1.0, -0.1)

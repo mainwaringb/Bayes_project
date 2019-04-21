@@ -1,5 +1,15 @@
 #Hierarchical model with group-level predictors, assuming independence between Betas
 
+data{
+  l1_size <- dim(x_l1) #get the number of rows and columns in the data frame containing x_l0
+  K <- l1_size[2]
+
+  l0_size <- dim(x_l0) #get the number of rows and columns in the data frame containing x_l1
+  J <- l0_size[2]
+
+  Q <- max(group_index)
+}
+
 model{
 
   #Create individual-level "outcome" variables
