@@ -1,0 +1,63 @@
+#Hierarchical model with group-level predictors, allowing for covariance between Betas
+
+data{
+  l1_size <- dim(x_l1) #get the number of rows and columns in the data frame containing x_l0
+  K <- l1_size[2]
+
+  l0_size <- dim(x_l0) #get the number of rows and columns in the data frame containing x_l1
+  J <- l0_size[2]
+
+  Q <- max(group_index)
+}
+
+model{
+  #Create individual-level "outcome" variables
+  for(n in 1:N){
+      #Define y's here
+      mu.y[n] <- inprod(x_l0[n,], betagamma[beta_index]) + alpha[group_index[n]]
+      y[n] ~ dnorm(mu.y[n], tau.y)
+
+      #Impute missing X's here (only for individual-level variables)
+      #"imputematrix" is an argument passed to the model, where reach row specifies the variables that should be used to impute that rows
+      #For example, the first row of imputematrix tells us which other variables should be used to impute x1
+      for(j in 1:J){
+          #Arbitrarily fill out missing values of x with uniform distribution, so JAGS doesn't complain
+          #(this gets thrown away and not used)
+          x_l0[n,j] ~ dunif(0,10)
+
+          #Create an imputation for every observation in the dataset, which is stored in x_hash
+          mu.xmiss[n,j] <- inprod(x_l0[n,], beta.xmiss[j,]) + beta0.xmiss[j]
+          x_hash[n,j] ~ dnorm(mu.xmiss[n,j], tau.xmiss[j])
+
+          #Then create x_imp, from x_hash (where values are missing) and x_l0 (where values are observed)
+          x_imp[n,j] <- missing[n,j] * x_hash[n,j] + (1 - missing[n,j] * x_l0[n,j])
+      }
+  }
+
+  #Define group-level intercept
+  for(q in 1:Q){
+      alpha[q] ~ dnorm(mu.a[q], tau.a)
+      mu.a[q] <- inprod(x_l1[q,], betagamma[gamma_index])
+  }
+
+  #Define Beta and Gamma via a shared covariance matrix
+  #Since "betagamma" is a single vector, we pass JAGS arguments "beta_index" and "gamma_index" to specify which elements are group-level and which are individual-level
+  betagamma ~ dmnorm.vcov(BG_mean, BG_var)
+
+
+  #Define coefficients for imputation model (these are separate from coefficients used to predict y)
+  for(j in 1:J){
+      beta0.xmiss[j] ~ dnorm(0, .01)
+      for(j2 in 1:J){
+          #specify an "initial" dnorm for each beta.xmiss, even for betas we ultimately don't want to use
+          #then set some betas to zero
+
+          beta.xmiss.init[j, j2] ~ dnorm(0, .01)
+          beta.xmiss[j, j2] <- beta.xmiss.init[j, j2] * imputematrix[j, j2]
+      }
+      tau.xmiss[j] <- dgamma(.01, .01, 1)
+  }
+
+  tau.y <- dgamma(.01, .01, 1)
+  tau.a <- dgamma(.01, .01, 1)
+}

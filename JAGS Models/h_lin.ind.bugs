@@ -1,0 +1,29 @@
+#Hierarchical model with group-level predictors, no random intercepts
+
+model{
+
+  #Define y
+  for(n in 1:N){
+    mu.y[n] <- inprod(x_l0[n,], beta[]) + alpha[group_index[n]]
+    y[n] ~ dnorm(mu.y[n], tau.y)
+  }
+
+  #Define group-level intercept
+  for(q in 1:Q){
+    alpha[q] ~ dnorm(mu.a[q], tau.a)
+    mu.a[q] <- inprod(x_l1[q,], gamma[])
+  }
+
+  #Define individual-level betas (coefficients relating individual-level variables to outcome)
+  for(j in 1:J){
+    beta[j] ~ dnorm(B_mean[j], B_var[j])
+  }
+
+  #Define group-level gammas (coefficients relating *group*-level variables to outcome)
+  for(k in 1:K){
+    gamma[k] ~ dnorm(G_mean[k], G_var[k])
+  }
+
+  tau.y <- dgamma(.01, .01, 1)
+  tau.a <- dgamma(.01, .01, 1)
+}
