@@ -45,7 +45,6 @@ jags_data.pre_miss$imputematrix <- matrix(c(TRUE, TRUE, TRUE, FALSE, FALSE, TRUE
 jags_data.pre_miss$imputematrix[,c(5,6)] <- FALSE
 diag(jags_data.pre_miss$imputematrix) <- FALSE
 jags_data.pre_miss$missing <- is.na(jags_data.pre_miss$x_l0)
-jags_data.pre_miss$imputelist <- c(1,2,3,6)
 
 
 #---2.4.2 Run model---

@@ -1,4 +1,4 @@
-#Hierarchical model with group-level predictors, no random intercepts
+#Hierarchical model with group-level predictors, assuming independence between Betas
 
 model{
 
@@ -18,8 +18,7 @@ model{
           x_l0[n,j] ~ dunif(0,10)
 
           #Create an imputation for every observation in the dataset, which is stored in x_hash
-          #Imputelist is a crude vector that defines which variables should be used in imputation - assuming this is constant across aimputations
-          mu.xmiss[n,j] <- inprod(x_l0[n,imputelist], beta.xmiss[j,imputelist]) + beta0.xmiss[j]
+          mu.xmiss[n,j] <- inprod(x_l0[n,], beta.xmiss[j,]) + beta0.xmiss[j]
           x_hash[n,j] ~ dnorm(mu.xmiss[n,j], tau.xmiss[j])
 
           #Then create x_imp, from x_hash (where values are missing) and x_l0 (where values are observed)
