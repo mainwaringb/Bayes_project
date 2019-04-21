@@ -21,7 +21,7 @@ jags_data.pre_miss <- makeJagsData(df = preSurvey.merged,  ivs = c("education_1"
 
 #Rename "x" vector to specify l0 (individual-level) predictor variables, and add l1 (group-level) predictor variables
 names(jags_data.pre_miss)[2] <- "x_l0"
-jags_data.pre_miss$x_l1 <- kreiseData[kreiseData$WahlkreisNr %in% preSurvey.valid$wahlkreis_num,
+jags_data.pre_miss$x_l1 <- kreiseData[kreiseData$WahlkreisNr %in% preSurvey.merged$wahlkreis_num,
                                       c("MigrantBackground_Yes_Pct",
                                         "GDP_PerCap_1000", "Educ_UnivQualif_Pct", "Unemp_Tot", "Age_60plus", "voteAfD")]
 #jags_data.pre_miss$K <- length(jags_data.pre_miss$x_l1) #Get number of L1 variables
