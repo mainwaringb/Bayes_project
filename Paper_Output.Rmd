@@ -80,9 +80,9 @@ Attitudinal data is taken from the 2017 cross-sectional components of the German
 
 The literature suggests two possible relationships between right-populist support and exposure to immigrants: the threat hypothesis suggests a negative association, while the contact hypothesis suggests a positive one. A third, null, hypothesis suggests that there is no discernible relationship.
 
-    Ha[threat]: positive association between exposure to immigrants and support for AfD
-    Ha[contact]: negative association between exposure to immigrants and support for AfD
-    H0: no association
+$$H^{threat}_{a}: \textrm{negative association between exposure to immigrants and support for AfD}$$
+$$H^{contact}_{a}: \textrm{positive association between exposure to immigrants and support for AfD}$$
+$$H_{0}: \textrm{no association}  $$
 
 The key dependent variable is favourability towards AfD, which is measured on a 0-to-10 scale. Because it is a continuous variable, it is mathematically and computationally easier to model than vote. Theories that link exposure to immigrants with *voting* focus on attitudes to the right-populist parties. As such, exposure to immigrants will likely have very similar effects on party favourability and vote intent. Attitudes towards the AfD are extremely polarised in both waves - a vast majority of the population appears to strongly oppose the party while a small minority support it.
 
@@ -107,21 +107,20 @@ To isolate the effect of exposure to immigrants, it is necessary to include a nu
 
 ### Model Specification
 
-To formally test the above hypotheses, I build a multilevel random-intercepts model. Use i to denote individual survey respondents, and j to denote constituencoes, so that j|i denotes the constituency for the ith respondent. Gamma and Beta are vectors of coefficients, while X[l0] and X[l1] are matrices of the individual-level ("level-0") and group-level ("level-1") independent variables.
+To formally test the above hypotheses, I build a multilevel random-intercepts model. Use i to denote individual survey respondents, and j to denote constituencoes, so that j|i denotes the constituency for the ith respondent. $\Gamma$ and $\beta$ are vectors of coefficients, while $X^{l0}$ and $X^{l1}$ are matrices of the individual-level ("level-0") and group-level ("level-1") independent variables.
 
-    y[i] = BX[l0, i] + alpha[j|i] + epsilon[i]
-    alpha[j] = GammaX[l1, j] + tau[j]
-    y[i] = BetaX[l0, i] + GammaX[l1, j] + epsilon[i] + tau[j]
-    
+$$y_{i} = \beta X_{i}^{l0} + \alpha_{j|i} + \varepsilon_{i}$$
+$$\alpha_{j} = \Gamma X_{j}^{l1} + \tau_{j}$$ 
+
 which is equivalent to specifying:
-    
-    y[i,j]|X[l0, i], X[l1, j] ~ N(BetaX[l0, i] + GammaX[l1, j],  epsilon[i] + tau[j])
 
-The hypotheses focuses on a specific element of gamma, namely Gamma[migrants]. Using the above notation:
+$$y_{i,j}|X ~ \sim \mathcal{N}(\beta X_{i}^{l0} + \Gamma X_{j}^{l1}, \varepsilon_{i} + \tau_{j})$$
     
-    Ha[threat]: Gamma[migrants] > 0
-    Ha[contact]: Gamma[migrants] < 0
-    H0: Gamma[migrants] =0
+The hypotheses focuses on a specific element of $\Gamma$(gamma), that which relates AfD favourability to the proportion of migrants in a parliamentary constituency. I notate this as $\Gamma_{migrant.yes}$. The hypotheses above can then be formalised as:
+    
+$$H^{threat}_{a}: \Gamma_{migrant.yes} > 0$$
+$$H^{contact}_{a}: \Gamma_{migrant.yes} < 0$$
+$$H_{0}: \Gamma_{migrant.yes} = 0 $$
     
 Data is missing on a substantial number of cases for two variables: the dependent variables (support for AfD), and one independent variable (income). Missing data was handled during the estimation process. Income is estimated in JAGS based on other individual-level variables, excluding age (age was excluded due to computational issues; a model that imputed based on group-level variables would be an interesting extension). There were also a trivial number of missing observations (`r sum(is.na(preSurvey.merged$age))`) for age, which were imputed using the same process.
 
@@ -132,13 +131,13 @@ Models were estimated in JAGS, mostly called from R using the `rjags` package. R
 
 My analysis centres on the post-election wave of the GLES data. To generate priors for this, I first draw upon the pre-election wave of GLES. Incorporating this prior information into the model allows, at least in theory, for narrower standard errors and more precise estimation. It also partially formalises the intuition that exist around right-populist parties: it is widely believed, for example, that these parties generally perform better amongst poorer, less-educated, and older people and amongst men.
 
-Priors for the post-election model were therefore specified using a multivariate normal distribution, based on the poseteriors means and covariance matrix from the pre-election survey. Covariances for both Beta and Gamma coeffiients were combined into a single covariance matrix. This choice was guided partially by theory, and partially by practically. The pre-election data (below) show high covariance between constituency-level Gamma variables, and between a few elements of Beta and Gamma - as well very high covariance between Beta[age] and Beta[age^2^]. Under these circumstances, at least some multivariate normal specifications seem useful; they have *potential* to speed model estimation and incorporate useful prior knowledge into the analysis. Specifying all variables as part of a multivariate distribution was judged as more practical than specifying an esoteric mix of univariate and multivariate priors.
+Priors for the post-election model were therefore specified using a multivariate normal distribution, based on the poseteriors means and covariance matrix from the pre-election survey. Covariances for both $\beta$ and $\Gamma$ coeffiients were combined into a single covariance matrix. This choice was guided partially by theory, and partially by practically. The pre-election data (below) show high covariance between elements of $\Gamma$ variables, and between a few elements of $\beta$ with a few elements of $\Gamma$. There was also very high covariance between $\beta_{age}$ and $\beta_{age^{2}}$. Under these circumstances, at least some multivariate normal specifications seem useful; they have *potential* to speed model estimation and incorporate useful prior knowledge into the analysis. Specifying all variables as part of a multivariate distribution was judged as more practical than specifying an esoteric mix of univariate and multivariate priors.
 
 Because it is possible that substantive in the electorate occurred between the two waves of survey, it would not be appropriate to *completely* copy the posteriors covariances. I instead multiply these covariances by 1.5, to discount past information and allow for the possibility of changing effect over time. Changing this adjustment, by making it broader or narrower, could be a useful robustness check on the model.
 
-The pre-election survey itself requires priors. For control variables, these were loose guesses, specified in the form of univariate normal distributions. Univariate distirbutions were chosen because there was no clear information that would suggest correlated estimates of Beta and Gamma; given this, univariate normal distributions were expected to be computationally easier and produce narrower posteriors. I expected that the AfD would perform better in poorer and less-educated constituencies, with higher unemployed and a more elderly population; likewise, I expected that AfD would be viewed more positively by poorer, less-educated, and unemployed people, and by men. 
+The pre-election survey itself requires priors. For control variables, these were loose guesses, specified in the form of univariate normal distributions. Univariate distirbutions were chosen because there was no clear information that would suggest correlated estimates of $\beta$ and $\Gamma$; given this, univariate normal distributions were expected to be computationally easier and produce narrower posteriors. I expected that the AfD would perform better in poorer and less-educated constituencies, with higher unemployed and a more elderly population; likewise, I expected that AfD would be viewed more positively by poorer, less-educated, and unemployed people, and by men. 
 
-These expectations were codified using loose rules of thumb for both the constituency and individual level. Priors for Gamma (at the constituency level) assumed that a shift from the 25th and 75th percentiles of the IV would correspond with a 1-point shift in the DV. [^7] Priors on individual-level variables (Beta) used a similar rule of thumb: each variable mwould have an approximately 1-point effect. [^8] Standard deviations on the priors were intentionally broad, to reflect that they were no more than educated guesses. 
+These expectations were codified using loose rules of thumb for both the constituency and individual level. Priors for $\Gamma$ (at the constituency level) assumed that a shift from the 25th and 75th percentiles of the IV would correspond with a 1-point shift in the DV. [^7] Priors on $\beta$ (at the individual level) used a similar rule of thumb: each variable mwould have an approximately 1-point effect. [^8] Standard deviations on the priors were intentionally broad, to reflect that they were no more than educated guesses. 
 
 **can these be moved into multiple columns, as well as prettified?**
 
@@ -163,7 +162,7 @@ For comparison, I also test entirely uninformative priors (setting the mean to z
 
 ###Estimation of Priors with Pre-Election Wave
 
-The pre-election model was computed with three Markov Chains. It was run over 50,000 iterations, using a thinning factor of 25, following a 10,000-iteration burn-in period. The model converges well on most variables. However, the strong autocorrelation between Beta[age] and Beta[age^2^] causes some issues. The difference between naive and time-series standard errors for these two variables is `r round(mean(summary(jags_out.pre_miss)$statistics[c(4:5), 4] / summary(jags_out.pre_miss)$statistics[c(4:5), 3]), 1)`x, compared with `r round(mean(summary(jags_out.pre_miss)$statistics[-c(4:5), 4] / summary(jags_out.pre_miss)$statistics[-c(4:5), 3]), 1)`x for other variables in the model. These can be seen in both the traces (which show very slow change between iterations), and the autocorrelation plots (which show very high dependence, even with thinning at n = 25).
+The pre-election model was computed with three Markov Chains. It was run over 50,000 iterations, using a thinning factor of 25, following a 10,000-iteration burn-in period. The model converges well on most variables. However, the strong autocorrelation between $\beta_{age}$ and $\beta_{age^{2}}$ causes some issues. The difference between naive and time-series standard errors for these two variables is `r round(mean(summary(jags_out.pre_miss)$statistics[c(4:5), 4] / summary(jags_out.pre_miss)$statistics[c(4:5), 3]), 1)`x, compared with `r round(mean(summary(jags_out.pre_miss)$statistics[-c(4:5), 4] / summary(jags_out.pre_miss)$statistics[-c(4:5), 3]), 1)`x for other variables in the model. These can be seen in both the traces (which show very slow change between iterations), and the autocorrelation plots (which show very high dependence, even with thinning at n = 25).
 
 
 ```{r, fig.align = 'center', fig.height = 8, fig.width = 10}
@@ -228,7 +227,7 @@ autocorr.plot(jags_out.post_miss[[1]][,c(8:13)], auto.layout = FALSE)
 
 ```
 
-While severe autocorrelation persisted, the Markov chains were clearly better mixed than in the pre-election model. The trace of Beta[age^2^] (below) and Beta[age] still showed autocorrelation, compared with the trace of another variable (Beta[educ.low] is used for reference).[^10] However, there no clear trend line over time, and a *relatively* good mix between the three chains. The density plots for all parameters, including the troublemaking age parameters, were smooth and approximately normally distributed.
+While severe autocorrelation persisted, the Markov chains were clearly better mixed than in the pre-election model. The trace of $\beta_{age^{2}}$ (below) and  $\beta_{age}$ still showed autocorrelation, compared with the trace of another variable ($\beta_{educ.low}$ is used for reference).[^10] However, there no clear trend line over time, and a *relatively* good mix between the three chains. The density plots for all parameters, including the troublemaking age parameters, were smooth and approximately normally distributed.
 
 ```{r, fig.align = 'center', fig.height = 4, fig.width = 10}
 plot(jags_out.post_miss[,c(1,5)], trace = TRUE, density = FALSE)
@@ -285,7 +284,7 @@ kable(beta.compare, digits = 3)
 ```
 
 While the effect of variables is stable between pre- and post-election waves, the effect of age continues to be somewhat unexpected. The age of peak AfD support is slightly older in the post-election survey, but only slightly (`r which.max(mfx.age.post$pred) + 17
-` years old, at the mean Beta). This runs against popular perceptions that the AfD's base is older Germans. Given the difficulties with estimating coefficients for age, I view this result with a degree of skepticism -- it may be a statistical artifact. Re-estimating these models with a simpler, categorical age specification would be a useful robustness check. However, there may also be a substantive explanation.
+` years old, at the posterior mean of $\beta$). This runs against popular perceptions that the AfD's base is older Germans. Given the difficulties with estimating coefficients for age, I view this result with a degree of skepticism -- it may be a statistical artifact. Re-estimating these models with a simpler, categorical age specification would be a useful robustness check. However, there may also be a substantive explanation.
 
 ```{r, fig.align = 'center', fig.height = 4, fig.width = 7}
 #For each of 8000 iterations * 3 markov chains, generate the predicted value at each age
