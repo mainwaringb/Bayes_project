@@ -52,6 +52,12 @@ if(runmodel == TRUE){
     jags_reg.pre_miss <- jags.model(file = "JAGS Models/h_lin_imp.ind.bugs", data = jags_data.pre_miss, n.chains = 3)
     update(jags_reg.pre_miss, 10000)
     jags_out.pre_miss <- coda.samples(model = jags_reg.pre_miss, variable.names = c("beta", "gamma"), n.iter = 50000, thin = 25)
+    
+    coefnames <- c("B[educ.low]", "B[educ.med]", "B[gend.male]", "B[age]", "B[age ^ 2]", "B[unemp]", "B[income]",
+                   "G[migrant.yes]", "G[income.high]", "G[educ.high]", "G[unemp]", "G[age.60+]", "G[vote.AfD]")
+    colnames(jags_out.pre_miss[[1]]) <- coefnames
+    colnames(jags_out.pre_miss[[2]]) <- coefnames
+    colnames(jags_out.pre_miss[[3]]) <- coefnames
     save(jags_out.pre_miss, file = "Data/JAGS Output - pre-full imp.RData")
 }
 
@@ -76,10 +82,6 @@ summary.pre_miss$statistics[-c(4:5), 4] / summary.pre_miss$statistics[-c(4:5), 3
 #---2.4.3 Inspect model---
 
 summ.pre_miss <- summary(jags_out.pre_miss)
-coefnames <- c("B[educ.low]", "B[educ.med]", "B[gend.male]", "B[age]", "B[age ^ 2]", "B[unemp]", "B[income]",
-               "G[migrant.yes]", "G[income.high]", "G[educ.high]", "G[unemp]", "G[age.60+]", "G[vote.AfD]")
-rownames(summ.pre_miss$quantiles) <- coefnames
-rownames(summ.pre_miss$statistics) <- coefnames
 summ.pre_miss$quantiles
 
 #Gamma[1] has a median of -.02, with a 95% credibility interval from -.042 to +.012
@@ -107,8 +109,6 @@ jags_dfout.pre_miss <-  do.call("rbind", jags_out.pre_miss)
 #And format nicely
 corr.pre_miss <- cor(jags_dfout.pre_miss)
 cov.pre_miss <- cov(jags_dfout.pre_miss)
-row.names(corr.pre_miss) <- coefnames
-colnames(corr.pre_miss) <- coefnames
 
 #View correlations
 corr.pre_miss
@@ -138,6 +138,13 @@ if(runmodel == TRUE){
     jags_reg.pre_flat_miss <- jags.model(file = "JAGS Models/h_lin_imp.ind.bugs", data = jags_data.pre_flat_miss, n.chains = 3)
     update(jags_reg.pre_flat_miss, 10000)
     jags_out.pre_flat_miss <- coda.samples(model = jags_reg.pre_flat_miss, variable.names = c("beta", "gamma"), n.iter = 50000, thin = 25)
+    
+    coefnames <- c("B[educ.low]", "B[educ.med]", "B[gend.male]", "B[age]", "B[age ^ 2]", "B[unemp]", "B[income]",
+                   "G[migrant.yes]", "G[income.high]", "G[educ.high]", "G[unemp]", "G[age.60+]", "G[vote.AfD]")
+    colnames(jags_out.pre_flat_miss[[1]]) <- coefnames
+    colnames(jags_out.pre_flat_miss[[2]]) <- coefnames
+    colnames(jags_out.pre_flat_miss[[3]]) <- coefnames
+
     save(jags_out.pre_flat_miss, file = "Data/JAGS Output - pre-flat imp.RData")
 }
 

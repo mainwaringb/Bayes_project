@@ -8,16 +8,15 @@ source("Scripts/MakeJagsData.R")
 load("Data/Covariance + Mean - pre-full imp.RData")
 load("Data/JAGS Output - post-full imp.RData")
 
+
 #Because these models are so time-consuming, set a flag to determine whether the model should actually be re-run
 runmodel <- FALSE
-
 
 burnin <- 35000
 iterations <- 10000000
 thin <- 125
 
 #Full model with missing data (individual + group-level predictors); specified via multivariate normal
-
 ####---3.1 Define data and model specs ---####
 
 #Create initial data object, for individual-level data
@@ -73,8 +72,6 @@ if(runmodel == TRUE){
     save(jags_out.post_miss, file = "Data/JAGS Output - post-full imp.RData")
 }
 
-#Rename columns
-
 
 plot(jags_out.post_miss) #mixing on gamma4 and gamma5(age still isn't great)
 autocorr.plot(jags_out.post_miss) #grautocorrelation is still a massive issue - endures at 3500+ lags for age, and a few hundred for gammas
@@ -85,6 +82,7 @@ gelman.plot(jags_out.post_miss) #shrink factor appears to settle down after arou
 
 summ.post_miss <- summary(jags_out.post_miss)
 summ.post_miss$quantiles
+summ.post_miss$statistics
 
 #Inspect autocorrelation plots for potentially problematic variables
 par(mfrow = c(1,2))
@@ -100,7 +98,27 @@ plot(jags_out.post_miss[,1], trace = TRUE, density = FALSE, main = "Trace of B[e
 
 ####---3.4 Visualise and discuss results---####
 
+#visualise posterior vs prior for Gamma[migrant.yes]
+#use MCMCtrace function, since it enables the plotting of priors against posteriors - but we first need to draw from the distribution of priors
+prior_draws <- rnorm(15000, mean =  summ.pre_miss$statistics[8,1], sd = sqrt(cov.pre_miss[8,8] * 1.5))
+MCMCtrace(jags_out.post_miss, params = "G\\[migrant.yes\\]", type = "density", priors = prior_draws,
+          main_den = "Prior and Posterior Density for G[migrant.yes]", lty_pr = "dashed", xlim = c(-0.06, 0.06), PPO_out = FALSE,
+          ISB = FALSE, pdf = FALSE)
 
-MCMCplot(jags_out.post_miss, ref_ovl = TRUE) #this works - but coefficients are on such different scales that the plot can be hard to read
+jags_out.pre_miss
 
+#visualise all gammas
+par(mfrow = c(1,2))
+MCMCplot(jags_out.post_miss[,c(8:13)], ref_ovl = TRUE, xlim = c(-.20, .20), main = "Post-Election", sz_ax = 1.5) 
+MCMCplot(jags_out.pre_miss[,c(8:13)], ref_ovl = TRUE, xlim = c(-.20, .20), main = "Pre-Election", sz_ax = 1.5) 
 
+#visualize all betas
+#This doesn't really work because parameters are on really different scales
+par(mfrow = c(1,2))
+MCMCplot(jags_out.post_miss[,c(1:7)], ref_ovl = TRUE, main = "Post-Election", sz_ax = 1.5) 
+MCMCplot(jags_out.pre_miss[,c(1:7)], ref_ovl = TRUE, main = "Pre-Election", sz_ax = 1.5) 
+
+beta.compare <- cbind(summ.post_miss$statistics[c(1:7),c(1:2)], summ.pre_miss$statistics[c(1:7),c(1:2)])
+colnames(beta.compare) <- c("Post-Election Mean", "Post-Election SD", "Pre-Election Mean", "Pre-Election SD")
+
+#visualise effect of age
