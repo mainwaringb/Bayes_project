@@ -17,6 +17,8 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 source("Scripts/6A - Hierarchical Model - Prep.R")
 library(rjags)
 library(MCMCvis)
+library(knitr) #Need to load the knitr library in order to use kable for table-formatting
+
 load("Data/JAGS Output - pre-full imp.RData")
 load("Data/JAGS Output - post-full imp.RData")
 load("Data/Covariance + Mean - pre-full imp.RData")
@@ -24,6 +26,20 @@ load("Data/Covariance + Mean - pre-full imp.RData")
 options(scipen = 999)
 ```
 
+```{r}
+#Do some further DP to generate objects used below
+
+#Generate named summary objects, for easier reference
+summ.pre_miss <- summary(jags_out.pre_miss)
+summ.post_miss <- summary(jags_out.post_miss)
+
+#Estimate marginal effect of age
+age_seq <- seq(from = 18, to = 90)
+mfx.age.post <- data.frame(age = age_seq, pred = age_seq * summ.post_miss$statistics[4,1] + (age_seq ^ 2) * summ.post_miss$statistics[5,1])
+mfx.age.pre <- data.frame(age = age_seq, pred = age_seq * summ.pre_miss$statistics[4,1] + (age_seq ^ 2) * summ.pre_miss$statistics[5,1])
+
+
+```
 
 Introductory summary paragraph here...
 
@@ -72,9 +88,9 @@ The key dependent variable is favourability towards AfD, which is measured on a 
 
 ```{r, cache = TRUE, fig.align = 'center', fig.height = 4}
 par(mfrow = c(1,2), oma = c(0,0,1.5,0), mar = c(5.1, 4.1, 2.1, 2.1))
-hist(preSurvey$Fav_AfD, main = '', xlab = "AfD favourability (pre-election)", ylim = c(0,1000), las = 1)
+hist(preSurvey.merged$Fav_AfD, main = '', xlab = "AfD favourability (pre-election)", ylim = c(0,1000), las = 1)
 #axis(side = 2, at = c(0, 200, 400, 600, 800, 1000), labels = c(0, 200, 400, 600, 800, 1000), las = 1)
-hist(postSurvey$Fav_AfD, main = '', xlab = "AfD favourability (post-election)", ylim = c(0,1000), las = 1)
+hist(postSurvey.merged$Fav_AfD, main = '', xlab = "AfD favourability (post-election)", ylim = c(0,1000), las = 1)
 mtext("Distribution of AfD Support, German Population", side = 3, outer = TRUE, cex = 1.2, font = 2)
 ```
 
@@ -161,17 +177,13 @@ autocorr.plot(jags_out.pre_miss[[1]][,5], main = "Autocorrelation of B[age ^ 2]"
 If this model were my main focus, I might have run with a longer number of iterations and higher thinning paramenter. However, the primary goal of analysing pre-election data is to generate a prior for use with post-election data. A quick initial run is sufficient for this purpose; narrow  standard errors on coefficient estimates are not particularly important. Even with this initial run, the credibility interval for age and age ^2^ lies outside zero, as shown in the output below.
 
 ```{r, results = 'asis'}
-library(knitr) #Need to load the knitr library in order to use kable for table-formatting
-
-#Prep summary object
-summ.pre_miss <- summary(jags_out.pre_miss)
-
 #Plot table of individual-level coefficients
 kable(summ.pre_miss$quantiles[c(1:7),c(1,3,5)], 
       caption = "Estimates of Beta coefficients", digits = 4)
 ```
 
-All individual-level variables have estimated effects with credibility intervals outside zero. Most effects were also in the expected direction: men, older people, the poorer, and the less-educated are more likely to support AfD. However, the coefficient for unemployment is signed in the opposite direction as expected: people who are unemployed (or live with an unemployed person) are *less* supportive of AfD. This finding could warrant further exploration.
+
+All individual-level variables have estimated effects with credibility intervals outside zero. Most effects were also in the expected direction: men, older people, the poorer, and the less-educated are more likely to support AfD. However, the coefficient for unemployment is signed in the opposite direction as expected: people who are unemployed (or live with an unemployed person) are *less* supportive of AfD. This finding could warrant further exploration. The curve relating age to AfD favourability was also somewhat surprising. Contrary to received wisdom, it suggested that *younger* Germans are more supportive of the AfD, after controlling for other variables. Support for the AfD, at the mean Beta, peaks at `r mfx.age.pre$age[mfx.age.pre$pred == max(mfx.age.pre$pred)]` after  controlling for other variables. 
 
 ```{r, results = 'asis'}
 kable(summ.pre_miss$quantiles[c(8:12),c(1,3,5)],
@@ -190,8 +202,6 @@ The effects of wakhlkreise-level variables are more surprising. Only two of the 
 <!-- #And format nicely -->
 <!-- corr.pre_miss <- cor(jags_dfout.pre_miss) -->
 <!-- cov.pre_miss <- cov(jags_dfout.pre_miss) -->
-<!-- row.names(corr.pre_miss) <- coefnames -->
-<!-- colnames(corr.pre_miss) <- coefnames -->
 
 <!-- #View correlations -->
 <!-- kable(corr.pre_miss[1:7,1:7], caption = "Correlations between Beta parameters in posterior", digits = 2) -->
@@ -204,7 +214,7 @@ The effects of wakhlkreise-level variables are more surprising. Only two of the 
 
 <!-- ``` -->
 
-The covariance between coefficients is generally low amongst individual-level Beta coefficients, high amongst constituency-level Gamma coefficients, and very high between Beta[age] and Beta[age^2^]. [^9] This suggests that, in specifying the priors for use with post-election data, at least some multivariate normal distributions are necessary. In particular multivariate prior distributions on the gamma coefficients, and on the beta coefficients relating to age, are likely to speed estimation by providing useful information.
+The covariance between coefficients is generally low amongst individual-level Beta coefficients, high amongst constituency-level Gamma coefficients, and very high between Beta[age] and Beta[age^2^]. [^9] This suggests that, in specifying the priors for use with post-election data, at least some multivariate normal distributions are necessary. In particular multivariate prior distributions on the gamma coefficients, and on the beta coefficients relating to age, are likely to provide useful information. This might in theory help speed estimation, although it was not ultimately clear that it did so.
 
 
 ###Estimation of Model with Post-Election Wave
@@ -218,18 +228,16 @@ autocorr.plot(jags_out.post_miss[[1]][,c(8:13)], auto.layout = FALSE)
 
 ```
 
-While severe autocorrelation persisted, the Markov chains were clearly better mixed than in the pre-election model. The trace of Beta[age^2^] (below) and Beta[age] still showed autocorrelation, compared with the trace of another variable (Beta[educ.low] is used for reference). However, there no clear trend line over time, and a *relatively* good mix between the three chains. The density plots for all parameters including the troublemaking age parameters, were smooth and approximately normally distributed.
+While severe autocorrelation persisted, the Markov chains were clearly better mixed than in the pre-election model. The trace of Beta[age^2^] (below) and Beta[age] still showed autocorrelation, compared with the trace of another variable (Beta[educ.low] is used for reference).[^10] However, there no clear trend line over time, and a *relatively* good mix between the three chains. The density plots for all parameters, including the troublemaking age parameters, were smooth and approximately normally distributed.
 
 ```{r, fig.align = 'center', fig.height = 4, fig.width = 10}
 plot(jags_out.post_miss[,c(1,5)], trace = TRUE, density = FALSE)
 ```
 
-The use of a multivariate normal prior, rather multiple univariate normal priors, was intended to speed convergence and increase accuracy. It is not clear whether this achieved its intended purpose.  The massive, continued autocorrelation suggests it may not have done so. Benchmarking speed and autocorrelation under several model specifications would be an interesting excercise; however, it is beyond the scope of the present paper. 
-
 An even longer run of the Markov chain might resolve these problems. This might require the use of parallelization and distributed computing. Alternatively, it might be pragmatic to drop the quadratic age term. Age could instead be specified as a categorical variable, with categories implied by the findings of a simple linear regression with quadratic term. For present purposes, I accept the Markov Chain shown above as "good enough."
 
 ##Findings
-
+###Constituency-level variables
 The number of migrants in an area appears to have virtually no relationship with favourability towards AfD. This challenges *both* the threat and contact hypotheses outlined above. The results of this analysis should not be taken "seriously," as discussed above, since they ignore important methodological concerns. Were these results to be taken seriously, however, they would suggest that immigrants are *not* a direct of driver of support for right populist-parties. The results would likely suggest that broader cultural anxieties, not the direct presence of immigrants or minorities, fuel right-populist success.
 
 ```{r, fig.align = 'center', fig.height = 4, fig.width = 7}
@@ -245,7 +253,7 @@ MCMCtrace(jags_out.post_miss, params = "G\\[migrant.yes\\]", type = "density", p
 
 Given that these results are somewhat surprising, I considered whether an incorrectly specified prior might be at fault. There would be little justification for setting a different prior *mean*, given that coefficients in the pre-election analysis were very robusrt to different priors. There could be a stronger case for setting a difference prior *variance*. The post-election survey suggests a coefficient above zero, while the pre-election survey suggests an effect below zero. Reducing the influence of the prior might lead to a coefficient whose credibility interval is above zero. However, given the long estimation time for this model, I was unable to explore alternate priors fully.
 
-```{r, fig.align = 'center', fig.height = 4, fig.width = 10}
+```{r, fig.align = 'center', fig.height = 5, fig.width = 10}
 #visualise all gammas
 par(mfrow = c(1,2))
 MCMCplot(jags_out.post_miss[,c(8:13)], ref_ovl = TRUE, xlim = c(-.20, .20), main = "Post-Election", sz_ax = 1.5) 
@@ -257,27 +265,63 @@ Other constituency-level variables show unexpected but relatively strong pattern
 
 Two substantive possibilities seem likely. In older communities, concerns about the pace of cultural change from immigration might be more salient. These concerns could easily affect even younger people within older communities - they can be disseminated by local media and informal social networks in a way that affects all residents of an older community.
 
-Alternatively, older communities might be more worried about or affected by the economic consequences of immigration. Older workers, with fewer years before retirement, face a different calculation about re-training or relocating in response to labour market pressures. Places with an older workforce might therefore be affected differently by immigration, in a way that affects young and old alike. This could include challenges to public finances and tax revenue; impact on wages and prices; or network effects that impact local firms' competitiveness. If the association between constituency age structure and view on AfD is genuine, and not a statistical artifact, this might lend support to an indirect of the threat hypothesis. However, the excact mechanisms here are unclear, and would need much more extensive theorizing.
+Alternatively, older communities might be more worried about or affected by the economic consequences of immigration. Older workers, with fewer years before retirement, face a different calculation about re-training or relocating in response to labour market pressures. Places with an older workforce might therefore be affected differently by immigration, in a way that affects young and old alike. This could include challenges to public finances and tax revenue; impact on wages and prices; or network effects that impact local firms' competitiveness. If the association between constituency age structure and view on AfD is genuine, and not a statistical artifact, this might lend support to an indirect of the threat hypothesis. However, the exact mechanisms here are unclear, and would need much more extensive theorizing.
 
-```{r, results = 'asis'}
+Analysis of the post-election survey also finds an unexpected *negative* relationship between AfD vote in a constituency and an individual's favourability towards AfD. People in AfD-supporting communities are, on average, *less* favourable to the AfD. This seems illogical. It is possible that this result represents some statistical fluke, or the ommmission of a needed control variable. However, assuming the result is genuine, it might represent a pattern of polarisation. In places where the AfD is weak, it is less threatening -- and people are more likely to hold "soft" views towards it. [^11] While this paper assumed that AfD favourability would be a useful proxy for vote, and could ease model estimations, these findings challenge that assumption. It might be worth specifying a model with (reported) vote as the dependent, to test this assumption. 
 
-#Generate summary object from post-election survey
-summ.post_miss <- summary(jags_out.post_miss)
+###Individual-level variables
 
+```{r}
 #Merge pre- and post-election output into a matrix
 beta.compare <- cbind(summ.post_miss$statistics[c(1:7),c(1:2)],  summ.pre_miss$statistics[c(1:7),c(1:2)])
 colnames(beta.compare) <- c("Post-Election Mean", "Post-Election SD", "Pre-Election Mean", "Pre-Election SD")
+```
 
+The effects of individual-level variables are mostly stable from pre- to post-election surveys. The estimated effect of household unemployment was notably smaller in the post-election survey, and the curve relating age to AfD favourability was somewhat different. However, posterior means were otherwise very similar. Standard deviations in the post-election shrunk by a relatively consistent factor, on average `r round(mean((beta.compare[,4] - beta.compare[,2]) / beta.compare[,4]), 2)`.
+
+
+```{r, results = 'asis'}
 kable(beta.compare, digits = 3)
+```
+
+While the effect of variables is stable between pre- and post-election waves, the effect of age continues to be somewhat unexpected. The age of peak AfD support is slightly older in the post-election survey, but only slightly (`r which.max(mfx.age.post$pred) + 17
+` years old, at the mean Beta). This runs against popular perceptions that the AfD's base is older Germans. Given the difficulties with estimating coefficients for age, I view this result with a degree of skepticism -- it may be a statistical artifact. Re-estimating these models with a simpler, categorical age specification would be a useful robustness check. However, there may also be a substantive explanation.
+
+```{r, fig.align = 'center', fig.height = 4, fig.width = 7}
+#For each of 8000 iterations * 3 markov chains, generate the predicted value at each age
+jags_dfout.post_miss <-  do.call("rbind", jags_out.post_miss)
+jags_dfout.pre_miss <-  do.call("rbind", jags_out.pre_miss)
+mfx_per_iter.age.post <- apply(jags_dfout.post_miss[,c(4,5)], 
+      1, function(x){
+          mfx_out <- (age_seq * x[1]) + (age_seq ^ 2 * x[2])
+          return(mfx_out)
+      })
+mfx_per_iter.age.pre <- apply(jags_dfout.pre_miss[,c(4,5)], 
+       1, function(x){
+           mfx_out <- (age_seq * x[1]) + (age_seq ^ 2 * x[2])
+           return(mfx_out)
+       })
+
+peak_per_iter.age.post <- apply(mfx_per_iter.age.post, 2, which.max) + 17
+peak_per_iter.age.pre <- apply(mfx_per_iter.age.pre, 2, which.max) + 17
+
+peak_density.age.post <- density(peak_per_iter.age.post, bw = 1.5)
+peak_density.age.pre <- density(peak_per_iter.age.pre, bw = 1.5)
+
+peak_density.age.pre <- density(peak_per_iter.age.pre, bw = 1.5)
+plot(peak_density.age.post, xlim = c(18,40), main = "Distribution of Age of Peak AfD support")
+lines(peak_density.age.pre, lty = "dashed", col = "red")
+legend(x = "topleft", legend = c("Post-Election", "Pre-Election"),
+       lty = c("solid", "dashed"), col = c("black", "red"))
 
 ```
 
-The effects of individual-level variables were more stable. The estimated effect of household unemployment was notably smaller in the post-election survey, and the curve relating age to AfD favourability was somewhat different. However, posterior means were otherwise very similar. Standard deviations in the post-election shrunk by a relatively consistent factor, on average round(mean((beta.compare[,4] - beta.compare[,2]) / beta.compare[,4]), 2)`.
+The most likely substantive explanation might be be that older *communities*, rather than older *individuals*, lean towards right-populism in Germany? More "extreme" right parties, like Germany's NPD or the United Kingdom's BNP and EDL, are seen to draw support from a base of younger, working-class men. Younger, working-class men in constituencies with aging demographics -- and a social enviorment that views immigrants as threat, regardless of their numbers -- might be the AfD's true core base. These conclusions should not be drawn from a "toy" paper that ignores causal inference problems. However, if similar findings were to occur under a more robust inference strategy, they would raise interesting questions.
 
 
 ##Conclusions
 
-
+Dolor sapiente consequatur aut error dolorem ut eum. Qui quod molestiae ut. Delectus libero quis ut placeat. Similique delectus dolores vitae nemo. Dolores officiis cum et reprehenderit perferendis iusto.
 
 [^1]: I am not writing for an academic audience here, and have limited time, so will not include full citations in this paper.
 
@@ -296,4 +340,8 @@ The effects of individual-level variables were more stable. The estimated effect
 [^8]: This translates to mean 1.0 for the male, unemployed, and low-education dummy variables;  mean 0.5 for the medium-education dummy variable; and mean 0.1 for the income variable scaled from 1 to 13.
 
 [^9]: Correlations *between* Beta and Gamma are generally weak - the main exception was Gamma[age], which was notably correlated with both B[education] variables, both B[age] variables, and B[income]. Priors for the post-election model were estimated using a full covariance matrix, including both Beta and Gamma coefficients.
+
+[^10]: The use of a multivariate normal prior, rather multiple univariate normal priors, was intended to speed convergence and increase accuracy. It is not clear whether this achieved its intended purpose. Benchmarking speed and autocorrelation under several model specifications would be an interesting excercise; however, it is beyond the scope of the present paper. 
+
+[^11]: Related to this, polarisation might also relate to social desirability bias. Constituencies might have *either* a small number of vocal AfD activists, or a larger number of "soft" supports (susceptible to social desirability bias). Measured AfD support might be higher in places where it has only a small number of dedicated activists.
 

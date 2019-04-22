@@ -7,6 +7,7 @@ source("Scripts/6A - Hierarchical Model - Prep.R")
 source("Scripts/MakeJagsData.R")
 load("Data/Covariance + Mean - pre-full imp.RData")
 load("Data/JAGS Output - post-full imp.RData")
+load("Data/JAGS Output - pre-full imp.RData")
 
 
 #Because these models are so time-consuming, set a flag to determine whether the model should actually be re-run
@@ -121,4 +122,58 @@ MCMCplot(jags_out.pre_miss[,c(1:7)], ref_ovl = TRUE, main = "Pre-Election", sz_a
 beta.compare <- cbind(summ.post_miss$statistics[c(1:7),c(1:2)], summ.pre_miss$statistics[c(1:7),c(1:2)])
 colnames(beta.compare) <- c("Post-Election Mean", "Post-Election SD", "Pre-Election Mean", "Pre-Election SD")
 
-#visualise effect of age
+
+####---3.5 Explore age in both pre- and post-surves---####
+
+#---visualise effect of age, at mean beta---
+age_seq <- seq(from = 18, to = 90)
+mfx.age.post <- data.frame(age = age_seq, pred = age_seq * summ.post_miss$statistics[4,1] + (age_seq ^ 2) * summ.post_miss$statistics[5,1])
+mfx.age.pre <- data.frame(age = age_seq, pred = age_seq * summ.pre_miss$statistics[4,1] + (age_seq ^ 2) * summ.pre_miss$statistics[5,1])
+
+par(mfrow = c(1,1))
+plot(mfx.age.post, type = "l", main = "Effect of age on AfD Favourability (Post-Election)", xlab = "Age", ylab = "AfD Favourability")
+plot(mfx.age.pre, type = "l", main = "Effect of age on AfD Favourability (Pre-Election)", xlab = "Age", ylab = "AfD Favourability")
+
+#---visualise uncertainty about the effect of age---
+jags_dfout.post_miss <-  do.call("rbind", jags_out.post_miss)
+jags_dfout.pre_miss <-  do.call("rbind", jags_out.pre_miss)
+
+#For each of 8000 iterations * 3 markov chains, generate the predicted value at each age
+mfx_per_iter.age.post <- apply(jags_dfout.post_miss[,c(4,5)], 
+      1, function(x){
+          mfx_out <- (age_seq * x[1]) + (age_seq ^ 2 * x[2])
+          return(mfx_out)
+      })
+mfx_per_iter.age.pre <- apply(jags_dfout.pre_miss[,c(4,5)], 
+       1, function(x){
+           mfx_out <- (age_seq * x[1]) + (age_seq ^ 2 * x[2])
+           return(mfx_out)
+       })
+
+#For each iteration, find the age at which AfD support peaks
+#Since our age sequence starts at 18 (the first element), add 17 to calculate age
+peak_per_iter.age.post <- apply(mfx_per_iter.age.post, 2, which.max) + 17
+peak_per_iter.age.pre <- apply(mfx_per_iter.age.pre, 2, which.max) + 17
+
+#Calculate the age of peak AfD support
+which.max(mfx.age.pre$pred) + 17
+which.max(mfx.age.post$pred) + 17
+
+#plot the distribution of peak ages
+hist(peak_per_iter.age.post, freq = FALSE, breaks = 22,
+     main = "Age of Maximum AfD Support (Post-Election)", xlim = c(18,40))
+hist(peak_per_iter.age.pre, freq = FALSE, breaks = 22,
+     main = "Age of Maximum AfD Support (Pre-Election)", xlim = c(18,40))
+summary(peak_per_iter.age.post)
+summary(peak_per_iter.age.pre)
+
+#Compute kernel density estimates
+peak_density.age.post <- density(peak_per_iter.age.post, bw = 1.5)
+peak_density.age.pre <- density(peak_per_iter.age.pre, bw = 1.5)
+plot(peak_density.age.post, xlim = c(18,40), main = "Distribution of Age of Peak AfD support")
+lines(peak_density.age.pre, lty = "dashed", col = "red")
+legend(x = "topleft", legend = c("Post-Election", "Pre-Election"),
+       lty = c("solid", "dashed"), col = c("black", "red"))
+
+
+
