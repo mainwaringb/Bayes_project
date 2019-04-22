@@ -13,9 +13,9 @@ load("Data/JAGS Output - pre-full imp.RData")
 #Because these models are so time-consuming, set a flag to determine whether the model should actually be re-run
 runmodel <- FALSE
 
-burnin <- 35000
-iterations <- 10000000
-thin <- 125
+burnin.post <- 35000
+iterations.post <- 1000000
+thin.post <- 125
 
 #Full model with missing data (individual + group-level predictors); specified via multivariate normal
 ####---3.1 Define data and model specs ---####
@@ -62,15 +62,16 @@ jags_data.post_miss$gamma_index <- 8:13 #Specify which elements of the "betagamm
 
 if(runmodel == TRUE){
     jags_reg.post_miss <- jags.model(file = "JAGS Models/h_lin_imp.cor.bugs", data = jags_data.post_miss, n.chains = 3)
-    update(jags_reg.post_miss, 35000)
-    jags_out.post_miss <- coda.samples(model = jags_reg.post_miss, variable.names = c("betagamma"), n.iter = 1000000, thin = 125)
+    update(object = jags_reg.post_miss, n.iter = burnin.post)
+    jags_out.post_miss <- coda.samples(model = jags_reg.post_miss, variable.names = c("betagamma"), n.iter = iterations.post, thin = thin.post)
     
     coefnames <- c("B[educ.low]", "B[educ.med]", "B[gend.male]", "B[age]", "B[age ^ 2]", "B[unemp]", "B[income]",
                    "G[migrant.yes]", "G[income.high]", "G[educ.high]", "G[unemp]", "G[age.60+]", "G[vote.AfD]")
     colnames(jags_out.post_miss[[1]]) <- coefnames
     colnames(jags_out.post_miss[[2]]) <- coefnames
     colnames(jags_out.post_miss[[3]]) <- coefnames
-    save(jags_out.post_miss, file = "Data/JAGS Output - post-full imp.RData")
+    
+    save(jags_out.post_miss, burnin.post, iterations.post, thin.post, file = "Data/JAGS Output - post-full imp.RData")
 }
 
 

@@ -1,7 +1,7 @@
 ---
 title: "Class Paper - Introduction to Bayesian Statistics"
 author: "Ben Mainwaring"
-date: "3/31/2019"
+date: "4/23/2019"
 output: html_document
 ---
 
@@ -38,6 +38,8 @@ age_seq <- seq(from = 18, to = 90)
 mfx.age.post <- data.frame(age = age_seq, pred = age_seq * summ.post_miss$statistics[4,1] + (age_seq ^ 2) * summ.post_miss$statistics[5,1])
 mfx.age.pre <- data.frame(age = age_seq, pred = age_seq * summ.pre_miss$statistics[4,1] + (age_seq ^ 2) * summ.pre_miss$statistics[5,1])
 
+coefnames <- c("B[educ.low]", "B[educ.med]", "B[gend.male]", "B[age]", "B[age ^ 2]", "B[unemp]", "B[income]",
+                   "G[migrant.yes]", "G[income.high]", "G[educ.high]", "G[unemp]", "G[age.60+]", "G[vote.AfD]")
 
 ```
 
@@ -87,6 +89,8 @@ $$H_{0}: \textrm{no association}  $$
 The key dependent variable is favourability towards AfD, which is measured on a 0-to-10 scale. Because it is a continuous variable, it is mathematically and computationally easier to model than vote. Theories that link exposure to immigrants with *voting* focus on attitudes to the right-populist parties. As such, exposure to immigrants will likely have very similar effects on party favourability and vote intent. Attitudes towards the AfD are extremely polarised in both waves - a vast majority of the population appears to strongly oppose the party while a small minority support it.
 
 ```{r, cache = TRUE, fig.align = 'center', fig.height = 4}
+#Plot histograms of AfD support in both survey wave
+
 par(mfrow = c(1,2), oma = c(0,0,1.5,0), mar = c(5.1, 4.1, 2.1, 2.1))
 hist(preSurvey.merged$Fav_AfD, main = '', xlab = "AfD favourability (pre-election)", ylim = c(0,1000), las = 1)
 #axis(side = 2, at = c(0, 200, 400, 600, 800, 1000), labels = c(0, 200, 400, 600, 800, 1000), las = 1)
@@ -97,6 +101,8 @@ mtext("Distribution of AfD Support, German Population", side = 3, outer = TRUE, 
 Exposure to immigrants is measured using a proxy of local immigrant population, as is common in the literature - specifically, the proportion of the local population with a migration background. so this is a widely-used proxy. "Local" is defined as a parliamentary constituency (wahlkreis); there are a total of `r nrow(kreiseData)` constituencies in Germany. In an average constituency, about `r round(mean(kreiseData$MigrantBackground_Yes_Pct))`% of the population has a migrant background, as seen below. While constituencies vary somewhat in size, the total proportion German residents with a backgrond remains `r round(sum(kreiseData$Pop_Total_Count * kreiseData$MigrantBackground_Yes_Pct) / sum(kreiseData$Pop_Total_Count))`%. 
 
 ```{r, cache = TRUE, fig.align = 'center', fig.height = 4, fig.width = 4}
+#Plot histograms of migrant background (key IV)
+
 par(mar = c(5.1, 4.1, 3.6, 2.1))
 hist(kreiseData$MigrantBackground_Yes_Pct, main = 'Migrant Background by Constituency',
      xlab = "% of population with migrant background")
@@ -139,22 +145,26 @@ The pre-election survey itself requires priors. For control variables, these wer
 
 These expectations were codified using loose rules of thumb for both the constituency and individual level. Priors for $\Gamma$ (at the constituency level) assumed that a shift from the 25th and 75th percentiles of the IV would correspond with a 1-point shift in the DV. [^7] Priors on $\beta$ (at the individual level) used a similar rule of thumb: each variable mwould have an approximately 1-point effect. [^8] Standard deviations on the priors were intentionally broad, to reflect that they were no more than educated guesses. 
 
-**can these be moved into multiple columns, as well as prettified?**
+```{r, results = 'asis'}
+#Define priors for Beta and Gamma in matrices, and ten output matrices to table
 
-    Gamma[migrant.yes] ~ N(0.0, 0.25)
-    Gamma[income.high] ~ N(-0.1, 0.25)
-    Gamma[educ.high] ~ N(-0.1, 0.25)
-    Gamma[unemp] ~ N(0.25, 0.625)
-    Gamma[age.60+] ~ N(0.2, 0.5)
-    Gamma[AfDshare] ~ N(0.33, 0.68)
-    
-    Beta[educ.low] ~ N(1.0, 5.0)
-    Beta[educ.med] ~ N(0.5, 5.0)
-    Beta[gend.male] ~ N(1.0, 5.0)
-    Beta[age] ~ N(0.0, 0.2)
-    Beta[age^2^] ~ N(0.0, 0.2)
-    Beta[unemp^ ~ N(1.0, 5.0)
-    Beta[income] ~ N(-0.1, 1.0)
+#Define priors
+B_priors <- matrix(data = c(c(1.0, 0.5, 1.0, 0.0, 0.0, 1.0, -0.1), 
+                            1 /  c(0.2, 0.2, 0.2, 5.0, 5.0, 0.2, 1.0)), nrow = 2, byrow = TRUE)
+colnames(B_priors) <- coefnames[1:7]
+rownames(B_priors) <- c("Mean", "SD")
+
+G_priors <- matrix(data = c(c(0.0, -0.1, -0.1, 0.25, 0.2, 0.33), (abs(c(0.2, -0.1, -0.1, 0.25, 0.2, 0.33) * 2.5) ^ 2)),
+                   nrow = 2, byrow = TRUE)
+colnames(G_priors) <- coefnames[7:12]
+rownames(G_priors) <- c("Mean", "SD")
+
+#Output tables via kable function
+kable(B_priors, 
+      caption = "Priors for Beta (pre-election survey)", digits = 2, format.args = list(nsmall = 2))
+kable(G_priors,
+      caption = "Priors for Gamma (pre-election survey)", digits = 2, format.args = list(nsmall = 2))
+```
 
 For comparison, I also test entirely uninformative priors (setting the mean to zero and standard deviation to 100 for all variables). The results when using uninformative priors are only trivially different, so they are not reported here.
 
@@ -162,10 +172,12 @@ For comparison, I also test entirely uninformative priors (setting the mean to z
 
 ###Estimation of Priors with Pre-Election Wave
 
-The pre-election model was computed with three Markov Chains. It was run over 50,000 iterations, using a thinning factor of 25, following a 10,000-iteration burn-in period. The model converges well on most variables. However, the strong autocorrelation between $\beta_{age}$ and $\beta_{age^{2}}$ causes some issues. The difference between naive and time-series standard errors for these two variables is `r round(mean(summary(jags_out.pre_miss)$statistics[c(4:5), 4] / summary(jags_out.pre_miss)$statistics[c(4:5), 3]), 1)`x, compared with `r round(mean(summary(jags_out.pre_miss)$statistics[-c(4:5), 4] / summary(jags_out.pre_miss)$statistics[-c(4:5), 3]), 1)`x for other variables in the model. These can be seen in both the traces (which show very slow change between iterations), and the autocorrelation plots (which show very high dependence, even with thinning at n = 25).
+The pre-election model was computed with three Markov Chains. It was run over `r format(iterations.pre, big.mark = ",")` iterations, using a thinning factor of `r thin.pre`, following a `r format(burnin.pre, big.mark = ",")`-iteration burn-in period. The model converges well on most variables. However, the strong autocorrelation between $\beta_{age}$ and $\beta_{age^{2}}$ causes some issues. The difference between naive and time-series standard errors for these two variables is `r round(mean(summary(jags_out.pre_miss)$statistics[c(4:5), 4] / summary(jags_out.pre_miss)$statistics[c(4:5), 3]), 1)`x, compared with `r round(mean(summary(jags_out.pre_miss)$statistics[-c(4:5), 4] / summary(jags_out.pre_miss)$statistics[-c(4:5), 3]), 1)`x for other variables in the model. These can be seen in both the traces (which show very slow change between iterations), and the autocorrelation plots (which show very high dependence, even with thinning at n = 25).
 
 
 ```{r, fig.align = 'center', fig.height = 8, fig.width = 10}
+#Output trace of coefficients for age
+
 par(mfrow = c(2,2))
 plot(jags_out.pre_miss[,4], trace = TRUE, density = FALSE, main = "Trace of B[age]", auto.layout = FALSE)
 plot(jags_out.pre_miss[,5], trace = TRUE, density = FALSE, main = "Trace of B[age ^ 2]", auto.layout = FALSE)
@@ -185,42 +197,23 @@ kable(summ.pre_miss$quantiles[c(1:7),c(1,3,5)],
 All individual-level variables have estimated effects with credibility intervals outside zero. Most effects were also in the expected direction: men, older people, the poorer, and the less-educated are more likely to support AfD. However, the coefficient for unemployment is signed in the opposite direction as expected: people who are unemployed (or live with an unemployed person) are *less* supportive of AfD. This finding could warrant further exploration. The curve relating age to AfD favourability was also somewhat surprising. Contrary to received wisdom, it suggested that *younger* Germans are more supportive of the AfD, after controlling for other variables. Support for the AfD, at the mean Beta, peaks at `r mfx.age.pre$age[mfx.age.pre$pred == max(mfx.age.pre$pred)]` after  controlling for other variables. 
 
 ```{r, results = 'asis'}
+#Plot table of constituency-level coefficients
 kable(summ.pre_miss$quantiles[c(8:12),c(1,3,5)],
       caption = "Estimates of Gamma coefficients", digits = 4)
 ```
 
 The effects of wakhlkreise-level variables are more surprising. Only two of the five variables have credibility intervals that lay entirely outside zero. This might be explained by the smaller number of observations for wahlkreise, or by the substantively smaller influence of constituency-level variabes: your neighbours' age, gender, and socioeconomic status are likely to have a smaller effect than your own personal status. One of the two nonzero Gamma coefficients (age) is in the expected direction: older parliamentary constituencies are more pro-AfD. The other (income) runs in an unexpected direction: wealthier parliamentary constituencies are also more pro-AfD. The finding regarding income does not fit easily with either threat or contact hypotheses runs contrary to both the contact and threat hypotheses. The contact the hypothesis would predict little relationship between constituency wealth and political views, while the threat hypothesis might expect that economically-secure communities would worry less about migrants.
 
-<!-- **Do I need to display these tables, given that my ultimate focus is on the post-election model?** -->
-
-<!-- ```{r, results = 'asis'} -->
-<!-- #coda.samples stores each markov chain as a separate list - use do.call("rbind"...) to convert them to a single data frame -->
-<!-- jags_dfout.pre_miss <-  do.call("rbind", jags_out.pre_miss) -->
-
-<!-- #Calculate the correlation and covariance matrix (correlation for easy display, covariance to feed in to priors of a future model) -->
-<!-- #And format nicely -->
-<!-- corr.pre_miss <- cor(jags_dfout.pre_miss) -->
-<!-- cov.pre_miss <- cov(jags_dfout.pre_miss) -->
-
-<!-- #View correlations -->
-<!-- kable(corr.pre_miss[1:7,1:7], caption = "Correlations between Beta parameters in posterior", digits = 2) -->
-
-<!-- kable(corr.pre_miss[8:12,8:12], caption = "Correlations between Beta parameters in posterior", digits = 2) -->
-
-<!-- #to fix table output, try kableExtra -->
-<!-- #https://community.rstudio.com/t/kableextra-how-to-create-a-table-with-equal-column-width/4386 -->
-<!-- #http://haozhu233.github.io/kableExtra/awesome_table_in_html.html -->
-
-<!-- ``` -->
-
 The covariance between coefficients is generally low amongst individual-level Beta coefficients, high amongst constituency-level Gamma coefficients, and very high between Beta[age] and Beta[age^2^]. [^9] This suggests that, in specifying the priors for use with post-election data, at least some multivariate normal distributions are necessary. In particular multivariate prior distributions on the gamma coefficients, and on the beta coefficients relating to age, are likely to provide useful information. This might in theory help speed estimation, although it was not ultimately clear that it did so.
 
 
 ###Estimation of Model with Post-Election Wave
 
-**Auto-update parameters**The post-election model was calculated with 1 million iterations and a thinning parameter of 125, following a 35,000-iteration burn-in period. Initial diangnostics, run on a much shorter Markov Chain, suggested this was neccessary to handle severe autocorrelation problems. Even with a very long model estimation, autocorrelation was an issue for Gamma parameters, and the Beta parameters related to age, as shown below (autocorrelations plots are arbitrarily taken from the first chain, but all chains show a similar pattern). 
+The post-election model was calculated with `r format(iterations.post, big.mark = ",")` iterations and a thinning parameter of `r thin.post`, following a `r format(burnin.post, big.mark = ",")`-iteration burn-in period. Initial diangnostics, run on a much shorter Markov Chain, suggested this was neccessary to handle severe autocorrelation problems. Even with a very long model estimation, autocorrelation was an issue for Gamma parameters, and the Beta parameters related to age, as shown below (autocorrelations plots are arbitrarily taken from the first chain, but all chains show a similar pattern). 
 
 ```{r, fig.align = 'center', fig.height = 8, fig.width = 10}
+#Plot autocorrelations of Betas for age, and all gammas
+
 par(mfrow = c(4,2))
 autocorr.plot(jags_out.post_miss[[1]][,c(4:5)], auto.layout = FALSE)
 autocorr.plot(jags_out.post_miss[[1]][,c(8:13)], auto.layout = FALSE)
@@ -230,6 +223,7 @@ autocorr.plot(jags_out.post_miss[[1]][,c(8:13)], auto.layout = FALSE)
 While severe autocorrelation persisted, the Markov chains were clearly better mixed than in the pre-election model. The trace of $\beta_{age^{2}}$ (below) and  $\beta_{age}$ still showed autocorrelation, compared with the trace of another variable ($\beta_{educ.low}$ is used for reference).[^10] However, there no clear trend line over time, and a *relatively* good mix between the three chains. The density plots for all parameters, including the troublemaking age parameters, were smooth and approximately normally distributed.
 
 ```{r, fig.align = 'center', fig.height = 4, fig.width = 10}
+#Plot trace of Beta[age ^ 2] (a problem variable) against Beta[educ.low] (a well-behaved one)
 plot(jags_out.post_miss[,c(1,5)], trace = TRUE, density = FALSE)
 ```
 
@@ -241,9 +235,11 @@ The number of migrants in an area appears to have virtually no relationship with
 
 ```{r, fig.align = 'center', fig.height = 4, fig.width = 7}
 #visualise posterior vs prior for Gamma[migrant.yes]
+
 #use MCMCtrace function, since it enables the plotting of priors against posteriors - but we first need to draw from the distribution of priors
 prior_draws <- rnorm(15000, mean =  summ.pre_miss$statistics[8,1], sd = sqrt(cov.pre_miss[8,8] * 1.5))
 
+#Plot
 MCMCtrace(jags_out.post_miss, params = "G\\[migrant.yes\\]", type = "density", priors = prior_draws,
           main_den = "Prior and Posterior Density for G[migrant.yes]", lty_pr = "dashed", xlim = c(-0.06, 0.06),
           PPO_out = FALSE,
@@ -254,6 +250,7 @@ Given that these results are somewhat surprising, I considered whether an incorr
 
 ```{r, fig.align = 'center', fig.height = 5, fig.width = 10}
 #visualise all gammas
+
 par(mfrow = c(1,2))
 MCMCplot(jags_out.post_miss[,c(8:13)], ref_ovl = TRUE, xlim = c(-.20, .20), main = "Post-Election", sz_ax = 1.5) 
 MCMCplot(jags_out.pre_miss[,c(8:13)], ref_ovl = TRUE, xlim = c(-.20, .20), main = "Pre-Election", sz_ax = 1.5) 
@@ -271,7 +268,7 @@ Analysis of the post-election survey also finds an unexpected *negative* relatio
 ###Individual-level variables
 
 ```{r}
-#Merge pre- and post-election output into a matrix
+#Merge pre- and post-election output into a matrix - don't print it yet, but the inline code below depends on it
 beta.compare <- cbind(summ.post_miss$statistics[c(1:7),c(1:2)],  summ.pre_miss$statistics[c(1:7),c(1:2)])
 colnames(beta.compare) <- c("Post-Election Mean", "Post-Election SD", "Pre-Election Mean", "Pre-Election SD")
 ```
@@ -287,6 +284,9 @@ While the effect of variables is stable between pre- and post-election waves, th
 ` years old, at the posterior mean of $\beta$). This runs against popular perceptions that the AfD's base is older Germans. Given the difficulties with estimating coefficients for age, I view this result with a degree of skepticism -- it may be a statistical artifact. Re-estimating these models with a simpler, categorical age specification would be a useful robustness check. However, there may also be a substantive explanation.
 
 ```{r, fig.align = 'center', fig.height = 4, fig.width = 7}
+#Visualise the age which maximises AfD support
+#More specifically - chart the distribution of the age that maximises AfD support, across iteerations of the Markov chain
+
 #For each of 8000 iterations * 3 markov chains, generate the predicted value at each age
 jags_dfout.post_miss <-  do.call("rbind", jags_out.post_miss)
 jags_dfout.pre_miss <-  do.call("rbind", jags_out.pre_miss)
@@ -301,12 +301,13 @@ mfx_per_iter.age.pre <- apply(jags_dfout.pre_miss[,c(4,5)],
            return(mfx_out)
        })
 
+#Identify the age that maximises AfD support, for each iteration
+#NB: since our survey is 18+, this first item in age_seq is "18" - so if which.max returns 1, this corresponds to an age of 18; to calculate age from which.max we add 17
 peak_per_iter.age.post <- apply(mfx_per_iter.age.post, 2, which.max) + 17
 peak_per_iter.age.pre <- apply(mfx_per_iter.age.pre, 2, which.max) + 17
 
+#Compute and plot kernel densities
 peak_density.age.post <- density(peak_per_iter.age.post, bw = 1.5)
-peak_density.age.pre <- density(peak_per_iter.age.pre, bw = 1.5)
-
 peak_density.age.pre <- density(peak_per_iter.age.pre, bw = 1.5)
 plot(peak_density.age.post, xlim = c(18,40), main = "Distribution of Age of Peak AfD support")
 lines(peak_density.age.pre, lty = "dashed", col = "red")

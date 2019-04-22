@@ -12,6 +12,10 @@ load("Data/JAGS Output - pre-flat imp.RData")
 #Because these models are so time-consuming, set a flag to determine whether the model should actually be re-run
 runmodel <- FALSE
 
+burnin.pre <- 10000
+iterations.pre <- 50000
+thin.pre <- 125
+
 
 ####---2.4. Full model with missing data (individual + group-level predictors); quasi-informed priors, specified independently---####
 
@@ -50,15 +54,15 @@ jags_data.pre_miss$missing <- is.na(jags_data.pre_miss$x_l0)
 
 if(runmodel == TRUE){
     jags_reg.pre_miss <- jags.model(file = "JAGS Models/h_lin_imp.ind.bugs", data = jags_data.pre_miss, n.chains = 3)
-    update(jags_reg.pre_miss, 10000)
-    jags_out.pre_miss <- coda.samples(model = jags_reg.pre_miss, variable.names = c("beta", "gamma"), n.iter = 50000, thin = 25)
+    update(object = jags_reg.pre_miss, n.iter = burnin.pre)
+    jags_out.pre_miss <- coda.samples(model = jags_reg.pre_miss, variable.names = c("beta", "gamma"), n.iter = iterations.pre, thin = thin.pre)
     
     coefnames <- c("B[educ.low]", "B[educ.med]", "B[gend.male]", "B[age]", "B[age ^ 2]", "B[unemp]", "B[income]",
                    "G[migrant.yes]", "G[income.high]", "G[educ.high]", "G[unemp]", "G[age.60+]", "G[vote.AfD]")
     colnames(jags_out.pre_miss[[1]]) <- coefnames
     colnames(jags_out.pre_miss[[2]]) <- coefnames
     colnames(jags_out.pre_miss[[3]]) <- coefnames
-    save(jags_out.pre_miss, file = "Data/JAGS Output - pre-full imp.RData")
+    save(jags_out.pre_miss, burnin.pre, iterations.pre, thin.pre, file = "Data/JAGS Output - pre-full imp.RData")
 }
 
 plot(jags_out.pre_miss)
@@ -136,8 +140,8 @@ jags_data.pre_flat_miss$G_var <-  c(0.001, 0.001, 0.001, 0.001, .001, .001)
 
 if(runmodel == TRUE){
     jags_reg.pre_flat_miss <- jags.model(file = "JAGS Models/h_lin_imp.ind.bugs", data = jags_data.pre_flat_miss, n.chains = 3)
-    update(jags_reg.pre_flat_miss, 10000)
-    jags_out.pre_flat_miss <- coda.samples(model = jags_reg.pre_flat_miss, variable.names = c("beta", "gamma"), n.iter = 50000, thin = 25)
+    update(object = jags_reg.pre_flat_miss, n.iter = burnin.pre)
+    jags_out.pre_flat_miss <- coda.samples(model = jags_reg.pre_flat_miss, variable.names = c("beta", "gamma"), n.iter = iterations.pre, thin = thin.pre)
     
     coefnames <- c("B[educ.low]", "B[educ.med]", "B[gend.male]", "B[age]", "B[age ^ 2]", "B[unemp]", "B[income]",
                    "G[migrant.yes]", "G[income.high]", "G[educ.high]", "G[unemp]", "G[age.60+]", "G[vote.AfD]")
@@ -145,7 +149,7 @@ if(runmodel == TRUE){
     colnames(jags_out.pre_flat_miss[[2]]) <- coefnames
     colnames(jags_out.pre_flat_miss[[3]]) <- coefnames
 
-    save(jags_out.pre_flat_miss, file = "Data/JAGS Output - pre-flat imp.RData")
+    save(jags_out.pre_flat_miss, thin.pre, iterations.pre, burnin.pre, file = "Data/JAGS Output - pre-flat imp.RData")
 }
 
 plot(jags_out.pre_flat_miss)
